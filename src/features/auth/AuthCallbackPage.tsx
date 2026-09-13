@@ -30,14 +30,12 @@ export function AuthCallbackPage() {
     <AuthLayout>
       {callbackError || settledWithoutUser ? (
         <div>
-          <p className="technical-label">Account / callback</p>
-          <h2 className="mt-4 text-[30px] font-medium leading-tight tracking-[-0.035em] text-ink">Sign-in could not be completed</h2>
+          <h2 className="text-[34px] font-semibold leading-[1.08] tracking-[-0.04em] text-ink">Sign-in could not be completed</h2>
           <p className="notice-danger mt-6" role="alert">{callbackError ?? 'No authenticated session was returned. Please try signing in again.'}</p>
           <Link className="button-primary mt-7 h-11 w-full" to="/sign-in">Return to sign in</Link>
         </div>
       ) : (
         <div role="status">
-          <p className="technical-label">Account / callback</p>
           <LoaderCircle className="mt-6 size-5 animate-spin text-brand" aria-hidden="true" />
           <h2 className="mt-5 text-[26px] font-medium tracking-[-0.03em] text-ink">Restoring your session</h2>
           <p className="mt-2 text-sm text-muted">The application will continue when authentication is complete.</p>

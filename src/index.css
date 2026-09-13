@@ -4,9 +4,9 @@
 
 @layer base {
   :root {
-    font-family: "Instrument Sans Variable", Inter, ui-sans-serif, system-ui, sans-serif;
-    color: #c8c8c0;
-    background: #0a0a09;
+    font-family: "Avenir Next", "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
+    color: #f5f1e9;
+    background: #131516;
     color-scheme: dark;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -21,7 +21,7 @@
   html {
     min-width: 320px;
     min-height: 100%;
-    background: #0a0a09;
+    background: #131516;
   }
 
   body {
@@ -46,12 +46,12 @@
   }
 
   ::selection {
-    color: #1d0c08;
-    background: #ff795d;
+    color: #20170d;
+    background: #d8ad67;
   }
 
   :focus-visible {
-    outline: 2px solid #ff795d;
+    outline: 2px solid #e0bb78;
     outline-offset: 2px;
   }
 }
@@ -62,19 +62,19 @@
   }
 
   .button-primary {
-    @apply inline-flex h-9 items-center justify-center gap-2 rounded-[7px] bg-brand px-3.5 text-[13px] font-semibold text-brand-ink transition-colors duration-150 hover:bg-brand-hover disabled:opacity-45;
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand px-5 text-[13px] font-semibold text-brand-ink transition-all duration-150 hover:-translate-y-px hover:bg-brand-hover active:translate-y-0 disabled:opacity-45;
   }
 
   .button-secondary {
-    @apply inline-flex h-9 items-center justify-center gap-2 rounded-[7px] border border-border bg-surface-raised px-3.5 text-[13px] font-medium text-ink transition-colors duration-150 hover:border-border-strong hover:bg-surface-hover disabled:opacity-45;
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-5 text-[13px] font-semibold text-ink transition-all duration-150 hover:-translate-y-px hover:border-muted hover:bg-surface-subtle active:translate-y-0 disabled:opacity-45;
   }
 
   .button-ghost {
-    @apply inline-flex h-9 items-center justify-center gap-2 rounded-[7px] px-3 text-[13px] font-medium text-muted transition-colors duration-150 hover:bg-surface-subtle hover:text-ink disabled:opacity-45;
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-full px-4 text-[13px] font-semibold text-muted transition-colors duration-150 hover:bg-surface-subtle hover:text-ink disabled:opacity-45;
   }
 
   .icon-button {
-    @apply grid size-9 place-items-center rounded-[7px] text-muted transition-colors duration-150 hover:bg-surface-subtle hover:text-ink disabled:opacity-45;
+    @apply grid size-10 place-items-center rounded-full text-muted transition-colors duration-150 hover:bg-surface-subtle hover:text-ink disabled:opacity-45;
   }
 
   .field-label {
@@ -82,7 +82,7 @@
   }
 
   .field-input {
-    @apply mt-1.5 h-11 w-full rounded-[7px] border border-border bg-surface-raised px-3 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted-soft focus:border-brand focus:ring-2 focus:ring-brand/10;
+    @apply mt-1.5 h-11 w-full rounded-lg border border-border-strong bg-surface px-3 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted-soft focus:border-focus focus:ring-2 focus:ring-brand/20;
   }
 
   .field-hint {
@@ -126,7 +126,7 @@
   }
 
   .paper-control {
-    color-scheme: light;
+    color-scheme: dark;
   }
 
   .manifest-label {
@@ -134,7 +134,7 @@
   }
 
   .manifest-input {
-    color-scheme: light;
+    color-scheme: dark;
     @apply mt-1.5 h-11 w-full rounded-[7px] border border-paper-line bg-paper-raised px-3 text-sm text-paper-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-paper-ink/35 focus:border-brand focus:ring-2 focus:ring-brand/15;
   }
 
@@ -143,52 +143,84 @@
   }
 
   .manifest-choice {
-    @apply flex cursor-pointer items-start gap-2.5 border border-paper-line bg-paper-raised px-3 py-3 text-[12px] leading-5 text-paper-ink transition-colors has-[:checked]:border-brand has-[:checked]:bg-paper-soft;
+    @apply flex cursor-pointer items-start gap-2.5 rounded-lg border border-paper-line bg-paper-raised px-3 py-3 text-[12px] leading-5 text-paper-ink transition-colors has-[:checked]:border-brand has-[:checked]:bg-paper-soft;
   }
 
   .manifest-paper .text-ink,
   .manifest-paper .field-label {
-    color: #151612 !important;
+    color: #f5f1e9 !important;
   }
 
   .manifest-paper .text-muted,
   .manifest-paper .field-hint {
-    color: rgb(21 22 18 / 0.56) !important;
+    color: rgb(245 241 233 / 0.68) !important;
   }
 
   .manifest-paper .text-muted-soft,
   .manifest-paper .technical-label {
-    color: rgb(21 22 18 / 0.4) !important;
+    color: rgb(245 241 233 / 0.48) !important;
   }
 
   .manifest-paper .border-border,
   .manifest-paper .border-border-strong {
-    border-color: #d8d2c5 !important;
+    border-color: #303536 !important;
   }
 
   .manifest-paper .bg-surface,
   .manifest-paper .bg-surface-raised {
-    background-color: #fffefa !important;
+    background-color: #181b1d !important;
   }
 
   .manifest-paper .bg-surface-subtle {
-    background-color: #f3f0e8 !important;
+    background-color: #25292a !important;
   }
 
   .manifest-paper .field-input {
-    color-scheme: light;
-    border-color: #d8d2c5;
-    background-color: #fffefa;
-    color: #151612;
+    color-scheme: dark;
+    border-color: #464c4c;
+    background-color: #181b1d;
+    color: #f5f1e9;
   }
 
   .manifest-paper .field-input::placeholder {
-    color: rgb(21 22 18 / 0.35);
+    color: rgb(245 241 233 / 0.35);
   }
 
   .manifest-paper .button-secondary {
-    border-color: #d8d2c5;
-    background-color: #fffefa;
-    color: #151612;
+    border-color: #464c4c;
+    background-color: #181b1d;
+    color: #f5f1e9;
+  }
+
+  .app-panel {
+    @apply border border-border bg-surface shadow-[0_10px_28px_rgba(0,0,0,0.16)];
+  }
+
+  .release-row {
+    @apply transition-[background-color,transform] duration-150;
+  }
+
+  .release-row:hover {
+    transform: translateY(-1px);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .app-panel {
+      animation: panel-enter 260ms ease-out both;
+    }
+
+    .status-dot-live {
+      animation: status-pulse 2s ease-in-out infinite;
+    }
+  }
+
+  @keyframes panel-enter {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes status-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .55; transform: scale(.8); }
   }
 }

@@ -197,7 +197,9 @@ async function startConnection(request: Request, body: Record<string, unknown>) 
     scope: REQUIRED_SCOPES.join(' '),
     access_type: 'offline',
     include_granted_scopes: 'true',
-    prompt: 'consent',
+    // Explicit account selection keeps "Connect another channel" useful even
+    // when the browser already has a Google account session.
+    prompt: 'select_account consent',
     state,
     code_challenge: codeChallenge,
     code_challenge_method: 'S256',

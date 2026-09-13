@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Navigate, Route, Routes, Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Navigate, Route, Routes, Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from './features/auth/AuthContext'
 import { AuthLoadingScreen, ProtectedRoute, PublicOnlyRoute } from './features/auth/RouteGuards'
 import { youtubeChannelsQueryKey } from './features/youtube/channels'
@@ -43,14 +43,18 @@ function DashboardRoute() {
 }
 
 function App() {
+  const location = useLocation()
+
   return (
     <>
-      <a
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[80] focus:rounded-[7px] focus:bg-brand focus:px-4 focus:py-2 focus:text-[13px] focus:font-semibold focus:text-brand-ink"
-        href="#release-ledger-panel"
-      >
-        Skip to release ledger
-      </a>
+      {location.pathname === '/app' ? (
+        <a
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[80] focus:rounded-full focus:bg-brand focus:px-4 focus:py-2 focus:text-[13px] focus:font-semibold focus:text-brand-ink"
+          href="#release-ledger-panel"
+        >
+          Skip to release ledger
+        </a>
+      ) : null}
       <Suspense fallback={<AuthLoadingScreen />}>
         <Routes>
           <Route element={<Navigate replace to="/app" />} path="/" />

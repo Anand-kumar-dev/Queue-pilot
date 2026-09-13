@@ -9,7 +9,7 @@ import { useAuth } from './AuthContext'
 type ResetPhase = 'request' | 'code' | 'new-password' | 'success'
 
 export function ResetPasswordPage() {
-  const { config, configLoading } = useAuth()
+  const { config } = useAuth()
   const [searchParams] = useSearchParams()
   const linkToken = searchParams.get('token')
   const linkReady = searchParams.get('insforge_status') === 'ready' && Boolean(linkToken)
@@ -94,18 +94,16 @@ export function ResetPasswordPage() {
     <AuthLayout>
       {phase === 'success' ? (
         <div>
-          <div className="flex items-center justify-between">
-            <p className="technical-label">Account / recovery</p>
+          <div className="flex justify-end">
             <div className="grid size-8 place-items-center rounded-[5px] bg-status-ready-bg text-status-ready"><CheckCircle2 className="size-4" aria-hidden="true" /></div>
           </div>
-          <h2 className="mt-5 text-[30px] font-medium leading-tight tracking-[-0.035em] text-ink">Password updated</h2>
+          <h2 className="mt-5 text-[34px] font-semibold leading-[1.08] tracking-[-0.04em] text-ink">Password updated</h2>
           <p className="mt-2 text-sm leading-6 text-muted">Your account now uses the new password. Return to sign in when you are ready.</p>
           <Link className="button-primary mt-8 h-11 w-full" to="/sign-in">Back to sign in</Link>
         </div>
       ) : (
         <div>
-          <p className="technical-label">Account / recovery</p>
-          <h2 className="mt-4 text-[30px] font-medium leading-tight tracking-[-0.035em] text-ink">
+          <h2 className="text-[34px] font-semibold leading-[1.08] tracking-[-0.04em] text-ink">
             {phase === 'request' ? 'Reset your password' : phase === 'code' ? 'Enter your reset code' : 'Choose a new password'}
           </h2>
           <p className="mt-2 text-sm leading-6 text-muted">
@@ -117,7 +115,7 @@ export function ResetPasswordPage() {
               <label className="field-label">Email<input autoComplete="email" className="field-input" onChange={(event) => setEmail(event.target.value)} required type="email" value={email} /></label>
               {notice ? <p className="notice-success">{notice}</p> : null}
               {error ? <p className="notice-danger" role="alert">{error}</p> : null}
-              <button className="button-primary h-11 w-full" disabled={pending || configLoading} type="submit">{pending ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : null}Send reset instructions</button>
+              <button className="button-primary h-11 w-full" disabled={pending} type="submit">{pending ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : null}Send reset instructions</button>
             </form>
           ) : null}
 

@@ -6,6 +6,12 @@ allowed_redirect_urls = [
   "http://127.0.0.1:5173/sign-in",
   "http://localhost:5173/reset-password",
   "http://127.0.0.1:5173/reset-password",
+  "https://pzmh35a7.insforge.site/auth/callback",
+  "https://pzmh35a7.insforge.site/sign-in",
+  "https://pzmh35a7.insforge.site/reset-password",
+  "https://queuepilot.anandd.dev/auth/callback",
+  "https://queuepilot.anandd.dev/sign-in",
+  "https://queuepilot.anandd.dev/reset-password",
 ]
 require_email_verification = true
 verify_email_method = "code"

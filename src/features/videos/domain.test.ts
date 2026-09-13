@@ -32,6 +32,7 @@ describe('video domain contract', () => {
 
   it('provides a safe fallback and rejects unsafe ownership segments', () => {
     expect(sanitizeUploadFileName('...')).toBe('upload')
+    expect(sanitizeUploadFileName('Cocoa storefront...1080p..MP4')).toBe('cocoa-storefront.1080p.mp4')
     expect(() =>
       createAssetObjectKey({ userId: '../escape', assetId: 'asset-id', fileName: 'video.mp4' }),
     ).toThrow('userId must be a non-empty storage-safe identifier')

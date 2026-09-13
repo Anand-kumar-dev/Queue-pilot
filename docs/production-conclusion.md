@@ -1,5 +1,7 @@
 # QueuePilot production conclusion
 
+> **Current operational status (2026-09-13):** The historical assessment below is retained for its design and launch rationale, but its implementation snapshot is superseded by [production-deployment.md](production-deployment.md). The live InsForge project now has the draft-lifecycle and publishing-pipeline migrations applied, the authenticated publishing gateway plus upload and status workers deployed, and two five-minute worker schedules active. Production auth redirects include `https://pzmh35a7.insforge.site`. A real connected-channel canary is still required before claiming end-to-end publishing validation; the 200 MB storage ceiling remains in effect.
+
 Research date: 2026-09-12
 Sources: Buffer / TubeBuddy / Hootsuite / PostEverywhere product pages, YouTube Data API v3 resumable-upload + upload guides, YouTube quota/429 incident reports (May 2026), SaaSUI 2026 dashboard patterns (Linear / Vercel / Stripe / Attio), plus local audit in `docs/production-readiness-audit.md` and `docs/backend-architecture.md`.
 

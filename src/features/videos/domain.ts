@@ -18,6 +18,7 @@ export const VIDEO_POST_STATUSES = [
   'queued',
   'uploading',
   'processing',
+  'ready',
   'scheduled',
   'published',
   'failed',
@@ -44,6 +45,9 @@ export function sanitizeUploadFileName(fileName: string) {
     .toLowerCase()
     .replace(/[^a-z0-9._-]+/g, '-')
     .replace(/-+/g, '-')
+    // InsForge rejects any `..` sequence anywhere in an object key. Keep a
+    // normal extension separator, but collapse ellipses and repeated dots.
+    .replace(/\.{2,}/g, '.')
     .replace(/-+\./g, '.')
     .replace(/^[.-]+|[.-]+$/g, '')
     .slice(0, 120)

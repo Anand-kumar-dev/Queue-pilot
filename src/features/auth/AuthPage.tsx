@@ -23,12 +23,6 @@ function getReturnTo(state: unknown) {
   return getSafeReturnTo(pathname ? `${pathname}${search}` : null)
 }
 
-function ProviderIcon({ provider }: { provider: string }) {
-  if (provider === 'github') return <span className="text-[10px] font-bold" aria-hidden="true">GH</span>
-  if (provider === 'google') return <span className="text-sm font-bold text-[#4285f4]" aria-hidden="true">G</span>
-  return <span className="text-xs font-bold uppercase" aria-hidden="true">{provider.slice(0, 1)}</span>
-}
-
 function Field({
   label,
   name,
@@ -63,8 +57,16 @@ function Field({
   )
 }
 
+function GoogleMark() {
+  return <span aria-hidden="true" className="grid size-4 place-items-center font-sans text-[15px] font-bold leading-none text-[#e9c985]">G</span>
+}
+
+function GitHubMark() {
+  return <span aria-hidden="true" className="grid size-4 place-items-center rounded-full bg-ink text-[8px] font-bold text-app">GH</span>
+}
+
 export function AuthPage() {
-  const { config, configError, configLoading, refreshUser } = useAuth()
+  const { config, refreshUser } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [mode, setMode] = useState<AuthMode>('sign-in')
@@ -79,7 +81,6 @@ export function AuthPage() {
 
   const returnTo = getReturnTo(location.state)
   const passwordMinLength = config?.passwordMinLength ?? 8
-  const providers = [...(config?.oAuthProviders ?? []), ...(config?.customOAuthProviders ?? [])]
 
   function switchMode(nextMode: AuthMode) {
     setMode(nextMode)
@@ -132,6 +133,25 @@ export function AuthPage() {
     }
   }
 
+  async function handleOAuth(provider: 'google' | 'github') {
+    setPending(true)
+    setError(null)
+    setNotice(null)
+    sessionStorage.setItem(AUTH_RETURN_TO_KEY, returnTo)
+
+    try {
+      const { error: oauthError } = await insforge.auth.signInWithOAuth(provider, {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        ...(provider === 'google' ? { additionalParams: { prompt: 'select_account' } } : {}),
+      })
+      if (oauthError) throw oauthError
+    } catch (caughtError) {
+      sessionStorage.removeItem(AUTH_RETURN_TO_KEY)
+      setError(toUserErrorMessage(caughtError, `We could not start ${provider === 'google' ? 'Google' : 'GitHub'} sign-in.`))
+      setPending(false)
+    }
+  }
+
   async function handleVerification(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setPending(true)
@@ -168,33 +188,16 @@ export function AuthPage() {
     }
   }
 
-  async function handleOAuth(provider: string) {
-    setPending(true)
-    setError(null)
-    sessionStorage.setItem(AUTH_RETURN_TO_KEY, returnTo)
-
-    const { error: oauthError } = await insforge.auth.signInWithOAuth(provider, {
-      redirectTo: `${window.location.origin}/auth/callback`,
-      additionalParams: provider === 'google' ? { prompt: 'select_account' } : undefined,
-    })
-
-    if (oauthError) {
-      setError(toUserErrorMessage(oauthError, `Could not continue with ${provider}.`))
-      setPending(false)
-    }
-  }
-
   return (
     <AuthLayout>
       {awaitingVerification ? (
         <div>
-          <div className="flex items-center justify-between">
-            <p className="technical-label">Account / verification</p>
+          <div className="flex justify-end">
             <div className="grid size-8 place-items-center rounded-[5px] bg-status-ready-bg text-status-ready">
               <MailCheck className="size-4" aria-hidden="true" />
             </div>
           </div>
-          <h2 className="mt-5 text-[30px] font-medium leading-tight tracking-[-0.035em] text-ink">Verify your email</h2>
+          <h2 className="mt-5 text-[34px] font-semibold leading-[1.08] tracking-[-0.04em] text-ink">Verify your email</h2>
           <p className="mt-2 text-sm leading-6 text-muted">Enter the six-digit code sent to <span className="font-medium text-ink">{email}</span>.</p>
 
           <form className="mt-8 space-y-5" onSubmit={handleVerification}>
@@ -226,34 +229,16 @@ export function AuthPage() {
         </div>
       ) : (
         <div>
-          <p className="technical-label">QueuePilot / access</p>
-          <h2 className="mt-4 text-[30px] font-medium leading-tight tracking-[-0.035em] text-ink">{mode === 'sign-in' ? 'Sign in to QueuePilot' : 'Create your account'}</h2>
+          <h2 className="text-[34px] font-semibold leading-[1.08] tracking-[-0.04em] text-ink">{mode === 'sign-in' ? 'Sign in to QueuePilot' : 'Create your account'}</h2>
           <p className="mt-2 text-sm leading-6 text-muted">
             {mode === 'sign-in' ? 'Continue to your publishing workspace.' : 'Create the app account first. YouTube channel access is requested separately.'}
           </p>
 
-          {providers.length > 0 ? (
-            <div className="mt-8 grid gap-2 sm:grid-cols-2">
-              {providers.map((provider) => (
-                <button
-                  className="button-secondary h-11 capitalize"
-                  disabled={pending}
-                  key={provider}
-                  onClick={() => void handleOAuth(provider)}
-                  type="button"
-                >
-                  <ProviderIcon provider={provider} />
-                  {provider}
-                </button>
-              ))}
-            </div>
-          ) : null}
-
-          {providers.length > 0 ? (
-            <div className="my-6 flex items-center gap-3 font-mono text-[9px] uppercase tracking-[0.08em] text-muted-soft">
-              <span className="h-px flex-1 bg-border" />or use email<span className="h-px flex-1 bg-border" />
-            </div>
-          ) : <div className="h-7" />}
+          <div className="mt-7 grid grid-cols-2 gap-3">
+            <button className="button-secondary h-11 px-3" disabled={pending} onClick={() => void handleOAuth('google')} type="button"><GoogleMark />Google</button>
+            <button className="button-secondary h-11 px-3" disabled={pending} onClick={() => void handleOAuth('github')} type="button"><GitHubMark />GitHub</button>
+          </div>
+          <div className="my-6 flex items-center gap-3" aria-hidden="true"><span className="h-px flex-1 bg-border" /><span className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted">or use email</span><span className="h-px flex-1 bg-border" /></div>
 
           <form className="space-y-4" onSubmit={handleCredentials}>
             {mode === 'sign-up' ? <Field autoComplete="name" label="Name" name="name" onChange={setName} type="text" value={name} /> : null}
@@ -264,10 +249,9 @@ export function AuthPage() {
             </div>
 
             {mode === 'sign-in' ? <div className="text-right"><Link className="text-[13px] font-medium text-link hover:underline" to="/reset-password">Forgot password?</Link></div> : null}
-            {configError ? <p className="notice-warning" role="alert">Authentication settings could not be loaded: {configError}</p> : null}
             {error ? <p className="notice-danger" role="alert">{error}</p> : null}
 
-            <button className="button-primary h-11 w-full" disabled={pending || configLoading} type="submit">
+            <button className="button-primary h-11 w-full" disabled={pending} type="submit">
               {pending ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : null}
               {mode === 'sign-in' ? 'Sign in' : 'Create account'}
             </button>

@@ -1,5 +1,7 @@
 # QueuePilot production-readiness audit
 
+> **Superseded implementation snapshot:** This is the pre-pipeline audit from August 2026. For the live state as of 2026-09-13, including deployed workers, schedules, production redirects, required credentials, and remaining launch gates, use [production-deployment.md](production-deployment.md). The historical findings remain useful context but must not be read as current system status.
+
 Audit date: 2026-08-16  
 Backend: `https://pzmh35a7.ap-southeast.insforge.app`  
 Audit mode: read-only, using the linked InsForge OSS project

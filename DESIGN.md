@@ -1,30 +1,30 @@
 ---
-name: QueuePilot flight desk
-description: A black operational frame surrounding a warm-paper YouTube release ledger.
+name: QueuePilot release desk
+description: A focused dark YouTube control room with a compact publishing queue.
 sources:
   editorial_polarity: design-sources/sanity/DESIGN.md
   asymmetric_emphasis: design-sources/airtable/DESIGN.md
   technical_density: design-sources/linear/DESIGN.md
   product_artifacts: design-sources/cal/DESIGN.md
-mode: black-frame-paper-ledger
+mode: dark-minimal-publishing-workspace
 fonts:
   sans: Instrument Sans Variable
   mono: IBM Plex Mono
 colors:
-  frame: "#0a0a09"
-  frame_soft: "#121311"
-  frame_raised: "#191a17"
-  frame_line: "#292a26"
-  paper: "#ecebe4"
-  paper_raised: "#f5f4ed"
-  paper_soft: "#e1e0d8"
-  paper_line: "#cecdc4"
-  ink: "#151612"
-  ink_soft: "#4f514a"
-  night_text: "#f4f3ec"
-  night_muted: "#96978f"
-  signal: "#ff795d"
-  signal_hover: "#ff8a70"
+  frame: "#0d1512"
+  frame_soft: "#151e1b"
+  frame_raised: "#1b2622"
+  frame_line: "#2c3e36"
+  paper: "#151e1b"
+  paper_raised: "#1b2622"
+  paper_soft: "#22332b"
+  paper_line: "#31463d"
+  ink: "#f4f7f5"
+  ink_soft: "#d1ddd7"
+  night_text: "#f4f7f5"
+  night_muted: "#93a79e"
+  signal: "#9bd77b"
+  signal_hover: "#b0e891"
 radii:
   app: 5px
   control: 7px
@@ -35,9 +35,11 @@ spacing: [4px, 8px, 12px, 16px, 20px, 24px, 32px, 40px, 48px, 64px]
 
 # Product idea
 
-QueuePilot is a release flight desk. The dark frame holds navigation, channel
-identity, and controls. The working records live on a warm-paper ledger that
-feels closer to a production rundown sheet than a social-media dashboard.
+QueuePilot is a personal YouTube release desk. A compact side rail keeps the
+small set of real destinations in reach; the main queue is the product. Dark
+surfaces reduce glare and let release state, title, channel, and next action
+carry the hierarchy. There are no generic dashboard metrics or decorative
+marketing panels.
 
 The interface must answer:
 
@@ -45,6 +47,37 @@ The interface must answer:
 2. What is moving through the upload pipeline?
 3. What has YouTube actually confirmed as scheduled?
 4. What failed, and what can be recovered?
+
+# Interaction rules
+
+The visual system is intentionally quiet. It follows these practical laws of
+UX rather than adding decoration:
+
+1. **One primary action per context (Hick's Law).** Bright green is reserved
+   for the next meaningful step: create a release, connect a channel, or
+   confirm an irreversible workflow step. Secondary controls stay outlined or
+   quiet so a release owner never has to scan a field of competing CTAs.
+2. **Chunk work by intent (Miller's Law and Common Region).** The release
+   stages are a single, ordered group. Search and filters belong with the
+   ledger they affect; connection and reference facts live together in the
+   supporting column; the composer keeps the active form separate from its
+   checklist.
+3. **Make status legible, not decorative (Von Restorff Effect).** Green means
+   a confirmed or primary state. Blue is transfer activity, amber asks for
+   attention, and red indicates a failure. Status always has text as well as
+   color.
+4. **Preserve familiar models (Jakob's Law).** Sign-in, recovery, list views,
+   calendar navigation, filters, and modal forms use expected web patterns.
+   The visual character is distinctive; the interaction mechanics are not
+   novel for their own sake.
+5. **Keep progress visible (Goal-Gradient Effect).** The release composer
+   surfaces its readiness count and the pipeline distinguishes intent,
+   transfer, and YouTube confirmation. Long operations report their state
+   instead of looking instantaneous.
+6. **Favor simple structure (Law of Prägnanz).** Deep teal frames the product,
+   white contains working data, and rounded cards only establish real groups.
+   There are no invented metrics, promotional gradients, or decorative
+   dashboards.
 
 # Source synthesis
 

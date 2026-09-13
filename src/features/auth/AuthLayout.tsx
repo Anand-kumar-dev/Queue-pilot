@@ -1,68 +1,20 @@
 import type { ReactNode } from 'react'
+import { CalendarClock, FileVideo2, ShieldCheck } from 'lucide-react'
 
 function Brand({ onLight = false }: { onLight?: boolean }) {
   return (
-    <div className="flex items-center gap-2.5">
-      <span className="grid size-7 shrink-0 place-items-center rounded-[5px] bg-paper" aria-hidden="true">
+    <div className="flex items-center gap-3">
+      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand shadow-[0_0_0_5px_rgba(216,173,103,0.12)]" aria-hidden="true">
         <svg className="size-5" fill="none" viewBox="0 0 24 24">
-          <path d="M4 6.5h8.5L19 12" stroke="#151612" strokeLinecap="round" strokeWidth="1.7" />
-          <path d="M4 12h10" stroke="#151612" strokeLinecap="round" strokeWidth="1.7" />
-          <path d="M4 17.5h8.5L19 12" stroke="#151612" strokeLinecap="round" strokeWidth="1.7" />
-          <circle cx="19" cy="12" fill="#ff795d" r="2.25" />
+          <path d="M4 6.5h8.5L19 12" stroke="#20170d" strokeLinecap="round" strokeWidth="1.7" />
+          <path d="M4 12h10" stroke="#20170d" strokeLinecap="round" strokeWidth="1.7" />
+          <path d="M4 17.5h8.5L19 12" stroke="#20170d" strokeLinecap="round" strokeWidth="1.7" />
+          <circle cx="19" cy="12" fill="#20170d" r="2.25" />
         </svg>
       </span>
       <div>
-        <p className={`text-sm font-medium tracking-[-0.01em] ${onLight ? 'text-ink' : 'text-white'}`}>QueuePilot</p>
-        <p className={`font-mono text-[9px] uppercase tracking-[0.08em] ${onLight ? 'text-muted' : 'text-white/35'}`}>Release operations</p>
-      </div>
-    </div>
-  )
-}
-
-function ReleaseArtifact() {
-  const stages = [
-    { label: 'Media', value: '18:42', state: 'complete' },
-    { label: 'Details', value: 'Ready', state: 'complete' },
-    { label: 'YouTube', value: 'Private', state: 'current' },
-    { label: 'Release', value: '18 Aug / 18:30 IST', state: 'upcoming' },
-  ]
-
-  return (
-    <div className="mt-9 overflow-hidden rounded-[10px] border border-rail-border bg-rail-elevated">
-      <div className="flex items-center justify-between border-b border-rail-border px-4 py-3">
-        <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-white/40">Example release</span>
-        <span className="flex items-center gap-1.5 text-[11px] text-white/50">
-          <span className="size-1.5 rounded-full bg-status-ready" />
-          Draft preserved
-        </span>
-      </div>
-      <div className="grid grid-cols-[80px_1fr] gap-4 border-b border-rail-border p-4">
-        <div className="aspect-video rounded-[5px] border border-white/10 bg-white/[0.045] p-2">
-          <div className="h-1.5 w-8 bg-white/20" />
-          <div className="mt-2 h-1 w-full bg-white/10" />
-          <div className="mt-1 h-1 w-2/3 bg-white/10" />
-        </div>
-        <div className="min-w-0">
-          <p className="truncate text-[13px] font-medium text-white">Studio workflow walkthrough</p>
-          <p className="mt-1 font-mono text-[10px] text-white/40">LONG FORM / 1080P</p>
-        </div>
-      </div>
-      <div className="divide-y divide-rail-border">
-        {stages.map((stage) => (
-          <div className="grid grid-cols-[18px_72px_1fr] items-center px-4 py-2.5" key={stage.label}>
-            <span
-              className={`size-2 rounded-full ${
-                stage.state === 'complete'
-                  ? 'bg-status-ready'
-                  : stage.state === 'current'
-                    ? 'bg-brand'
-                    : 'border border-white/20'
-              }`}
-            />
-            <span className="text-[11px] text-white/45">{stage.label}</span>
-            <span className="text-right font-mono text-[10px] text-white/70">{stage.value}</span>
-          </div>
-        ))}
+        <p className={`text-[15px] font-semibold tracking-[-0.02em] ${onLight ? 'text-ink' : 'text-white'}`}>QueuePilot</p>
+        <p className={`text-[11px] font-medium ${onLight ? 'text-muted' : 'text-white/45'}`}>YouTube publishing</p>
       </div>
     </div>
   )
@@ -70,39 +22,42 @@ function ReleaseArtifact() {
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <main className="min-h-screen bg-surface text-body">
-      <div className="grid min-h-screen lg:grid-cols-[minmax(360px,0.82fr)_minmax(560px,1.18fr)]">
-        <aside className="relative hidden overflow-hidden border-r border-rail-border bg-rail px-10 py-9 lg:flex lg:flex-col xl:px-14 xl:py-11">
-          <Brand />
+    <main className="h-screen overflow-hidden bg-[#0b0d0d] p-1 text-body sm:p-2">
+      <section className="relative mx-auto grid h-full max-w-[1500px] overflow-hidden border border-border bg-workspace lg:grid-cols-[52%_48%]">
+        <div className="relative hidden overflow-hidden border-r border-border bg-[#0d0f10] p-9 lg:block xl:p-12">
+          <div className="absolute inset-x-[-15%] bottom-[-34%] h-[62%] rotate-[-9deg] bg-[radial-gradient(ellipse_at_center,rgba(216,173,103,0.32),transparent_61%)] opacity-90" />
+          <div className="relative z-10"><Brand /></div>
+          <div className="relative z-10 mt-28 max-w-md xl:mt-36">
+            <span className="inline-flex items-center gap-2 rounded-full border border-brand/25 bg-brand/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-brand">Built for YouTube creators</span>
+            <h1 className="mt-6 text-[48px] font-semibold leading-[1.02] tracking-[-0.06em] text-ink xl:text-[58px]">Plan. Publish. <span className="text-brand">Grow.</span></h1>
+            <p className="mt-5 max-w-sm text-[15px] leading-6 text-muted">Everything you need to prepare, schedule, and publish YouTube releases without losing the details.</p>
+            <div className="mt-8 grid gap-4">
+              {[
+                [CalendarClock, 'Release planning', 'Keep target times and YouTube confirmations distinct.'],
+                [FileVideo2, 'Private media first', 'Save source media and metadata before it reaches YouTube.'],
+                [ShieldCheck, 'One connected channel', 'Your YouTube permission stays separate from app sign-in.'],
+              ].map(([Icon, title, detail]) => {
+                const FeatureIcon = Icon as typeof CalendarClock
+                return <div className="flex gap-3.5" key={title as string}><span className="grid size-9 shrink-0 place-items-center rounded-md bg-surface-raised text-brand"><FeatureIcon className="size-4" /></span><div><p className="text-[14px] font-semibold text-ink">{title as string}</p><p className="mt-0.5 text-[12px] leading-5 text-muted">{detail as string}</p></div></div>
+              })}
+            </div>
+          </div>
+          <div className="absolute bottom-7 right-[-22px] hidden w-[340px] rotate-[-5deg] rounded-xl border border-white/10 bg-[#161919]/90 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.5)] 2xl:block">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3"><span className="text-[12px] font-semibold text-ink">Publishing calendar</span><span className="text-[10px] text-brand">This week</span></div>
+            <div className="mt-4 grid grid-cols-7 gap-1">{['M','T','W','T','F','S','S'].map((day, index) => <div className={index === 2 ? 'h-24 rounded-md bg-brand/15 p-1.5' : 'h-24 rounded-md bg-white/[0.025] p-1.5'} key={`${day}-${index}`}><span className="text-[9px] text-muted">{day}</span>{index === 2 ? <span className="mt-6 block rounded bg-brand px-1.5 py-1 text-[8px] font-semibold text-brand-ink">Release</span> : null}</div>)}</div>
+          </div>
+        </div>
 
-          <div className="my-auto w-full max-w-md py-14">
-            <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-brand">Publishing operations</p>
-            <h1 className="mt-4 max-w-sm text-[38px] font-medium leading-[1.08] tracking-[-0.04em] text-white">
-              One clear path from file to release.
-            </h1>
-            <p className="mt-4 max-w-sm text-sm leading-6 text-white/50">
-              Prepare metadata, watch the transfer, and hand the final release time to YouTube without losing the operational details.
-            </p>
-            <ReleaseArtifact />
+        <div className="relative flex min-h-0 items-center justify-center overflow-y-auto px-5 py-8 sm:px-8 lg:overflow-hidden">
+          <div className="absolute left-5 top-5 lg:hidden"><Brand /></div>
+          <div className="w-full max-w-[440px]">
+            <div className="mb-8 hidden justify-end lg:flex"><p className="text-[12px] text-muted">YouTube publishing, simplified.</p></div>
+            <div className="app-panel rounded-xl p-7 sm:p-9">
+              {children}
+            </div>
           </div>
-
-          <div className="flex items-center justify-between border-t border-rail-border pt-5">
-            <p className="max-w-xs text-[11px] leading-5 text-white/35">App access and YouTube channel permission remain separate.</p>
-            <span className="font-mono text-[9px] text-white/25">01 / ACCESS</span>
-          </div>
-        </aside>
-
-        <section className="flex min-h-screen flex-col bg-surface px-5 py-6 sm:px-10 lg:px-16 lg:py-10 xl:px-24">
-          <div className="flex items-center justify-between lg:justify-end">
-            <div className="lg:hidden"><Brand onLight /></div>
-            <p className="font-mono text-[9px] uppercase tracking-[0.1em] text-muted">Secure application access</p>
-          </div>
-          <div className="flex flex-1 items-center justify-center py-10">
-            <div className="w-full max-w-[410px]">{children}</div>
-          </div>
-          <p className="text-center font-mono text-[9px] uppercase tracking-[0.08em] text-muted-soft">Protected by InsForge authentication</p>
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
   )
 }

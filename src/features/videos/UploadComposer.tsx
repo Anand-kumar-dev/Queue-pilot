@@ -6,6 +6,7 @@ import {
   FileImage,
   FileVideo2,
   LoaderCircle,
+  Play,
   UploadCloud,
   X,
 } from 'lucide-react'
@@ -35,7 +36,7 @@ import {
 const THUMBNAIL_LIMIT_BYTES = 2 * 1024 * 1024
 
 type AudienceChoice = 'not-kids' | 'kids' | ''
-type SubmitPhase = 'idle' | 'video' | 'thumbnail' | 'draft'
+type SubmitPhase = 'idle' | 'video' | 'thumbnail' | 'draft' | 'queue'
 
 interface UploadComposerProps {
   open: boolean
@@ -68,8 +69,9 @@ function localDateTimeValue(date: Date) {
 function phaseLabel(phase: SubmitPhase, editing: boolean) {
   if (phase === 'video') return 'Uploading video to private storage...'
   if (phase === 'thumbnail') return 'Uploading thumbnail...'
-  if (phase === 'draft') return editing ? 'Saving draft changes...' : 'Creating publishing draft...'
-  return editing ? 'Save draft changes' : 'Save upload draft'
+  if (phase === 'draft') return editing ? 'Saving release changes...' : 'Creating the release...'
+  if (phase === 'queue') return 'Scheduling with YouTube...'
+  return editing ? 'Save release changes' : 'Schedule for YouTube'
 }
 
 export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAsset }: UploadComposerProps) {
@@ -88,13 +90,14 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
   const [tags, setTags] = useState(draft?.tags.join(', ') ?? '')
   const [audience, setAudience] = useState<AudienceChoice>(draft?.made_for_kids === true ? 'kids' : draft?.made_for_kids === false ? 'not-kids' : '')
   const [privacy, setPrivacy] = useState<TargetPrivacyStatus>(draft?.target_privacy_status ?? 'private')
-  const [scheduleEnabled, setScheduleEnabled] = useState(Boolean(draft?.publish_at))
+  const [scheduleEnabled, setScheduleEnabled] = useState(() => draft ? Boolean(draft.publish_at) : true)
   const [publishAt, setPublishAt] = useState(() => draft?.publish_at ? localDateTimeValue(new Date(draft.publish_at)) : localDateTimeValue(new Date(Date.now() + 24 * 60 * 60 * 1000)))
   const [containsSyntheticMedia, setContainsSyntheticMedia] = useState(draft?.contains_synthetic_media ?? false)
   const [notifySubscribers, setNotifySubscribers] = useState(draft?.notify_subscribers ?? true)
   const [selectedChannelId, setSelectedChannelId] = useState(draft?.channel_id ?? '')
   const [phase, setPhase] = useState<SubmitPhase>('idle')
   const [error, setError] = useState<string | null>(null)
+  const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState<string | null>(null)
 
   const activeChannels = useMemo(() => channelsQuery.data?.filter((channel) => channel.connection_status === 'active') ?? [], [channelsQuery.data])
   const activeChannel = activeChannels.find((channel) => channel.id === selectedChannelId) ?? activeChannels[0]
@@ -125,6 +128,16 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
       setSelectedChannelId(activeChannels[0].id)
     }
   }, [activeChannels, selectedChannelId])
+
+  useEffect(() => {
+    if (!thumbnailFile) {
+      setThumbnailPreviewUrl(null)
+      return
+    }
+    const previewUrl = URL.createObjectURL(thumbnailFile)
+    setThumbnailPreviewUrl(previewUrl)
+    return () => URL.revokeObjectURL(previewUrl)
+  }, [thumbnailFile])
 
   useEffect(() => {
     if (!open) return
@@ -234,6 +247,7 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
 
     const channel = activeChannel!
     const uploadedObjects: Array<{ bucket: string; key: string }> = []
+    let releaseCreated = false
     const postFields = {
       channel_id: channel.id,
       title: title.trim(),
@@ -271,7 +285,10 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
           .from(STORAGE_BUCKETS.video)
           .upload(videoKey, selectedVideo)
         if (videoUploadError || !videoUploadData?.url) throw videoUploadError ?? new Error('The video upload did not return a storage URL.')
-        const storedVideoKey = videoUploadData.key ?? videoKey
+        // The request key is already validated and owner-scoped. Some storage
+        // gateways expose a URL-like value in their response metadata; that is
+        // not a valid database object key, so persist the request key instead.
+        const storedVideoKey = videoKey
         uploadedObjects.push({ bucket: STORAGE_BUCKETS.video, key: storedVideoKey })
         const videoAsset = {
           id: videoAssetId,
@@ -292,7 +309,7 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
             .from(STORAGE_BUCKETS.thumbnail)
             .upload(thumbnailKey, thumbnailFile)
           if (thumbnailUploadError || !thumbnailUploadData?.url) throw thumbnailUploadError ?? new Error('The thumbnail upload did not return a storage URL.')
-          const storedThumbnailKey = thumbnailUploadData.key ?? thumbnailKey
+          const storedThumbnailKey = thumbnailKey
           uploadedObjects.push({ bucket: STORAGE_BUCKETS.thumbnail, key: storedThumbnailKey })
           thumbnailAsset = {
             id: thumbnailAssetId,
@@ -306,7 +323,7 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
         }
 
         setPhase('draft')
-        const { error: draftError } = await insforge.database.rpc('create_video_draft', {
+        const { data: createdRelease, error: draftError } = await insforge.database.rpc('create_video_draft', {
           p_channel_id: channel.id,
           p_video_asset: videoAsset,
           p_thumbnail_asset: thumbnailAsset,
@@ -321,6 +338,14 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
           p_schedule_timezone: postFields.schedule_timezone,
         })
         if (draftError) throw draftError
+
+        const release = (Array.isArray(createdRelease) ? createdRelease[0] : createdRelease) as { id?: string } | null
+        if (!release?.id) throw new Error('The release was created but did not return an identifier.')
+        releaseCreated = true
+
+        setPhase('queue')
+        const { error: queueError } = await insforge.database.rpc('enqueue_video_post', { p_video_post_id: release.id })
+        if (queueError) throw queueError
       }
 
       await Promise.all([
@@ -330,8 +355,14 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
       await onSaved?.()
       onClose()
     } catch (caughtError) {
-      setError(toUserErrorMessage(caughtError, draft ? 'The draft changes could not be saved.' : 'The upload draft could not be created.'))
-      await Promise.allSettled(uploadedObjects.map(({ bucket, key }) => insforge.storage.from(bucket).remove(key)))
+      setError(toUserErrorMessage(caughtError, draft
+        ? 'The release changes could not be saved.'
+        : releaseCreated
+          ? 'The release was saved, but could not enter the YouTube queue. Open Releases and try again.'
+          : 'The release could not be created.'))
+      if (!releaseCreated) {
+        await Promise.allSettled(uploadedObjects.map(({ bucket, key }) => insforge.storage.from(bucket).remove(key)))
+      }
     } finally {
       setPhase('idle')
     }
@@ -344,36 +375,35 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
       <section
         aria-labelledby={titleId}
         aria-modal="true"
-        className="flex h-full w-full max-w-[1180px] flex-col overflow-hidden bg-paper shadow-2xl sm:max-h-[920px] sm:rounded-[14px]"
+        className="flex h-full w-full max-w-[1040px] flex-col overflow-hidden bg-paper shadow-dialog sm:max-h-[920px] sm:rounded-2xl"
         ref={dialogRef}
         role="dialog"
       >
-        <header className="flex min-h-16 shrink-0 items-center gap-4 border-b border-border bg-app px-4 py-3 sm:px-6">
-          <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-[7px] bg-paper">
+        <header className="flex min-h-[68px] shrink-0 items-center gap-4 border-b border-border bg-app px-5 py-3 sm:px-7">
+          <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-full bg-brand">
             <span className="relative block h-4 w-5">
-              <span className="absolute left-0 top-0 h-px w-3 bg-paper-ink" /><span className="absolute left-0 top-1/2 h-px w-4 bg-paper-ink" /><span className="absolute bottom-0 left-0 h-px w-3 bg-paper-ink" /><span className="absolute right-0 top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-brand" />
+              <span className="absolute left-0 top-0 h-px w-3 bg-app" /><span className="absolute left-0 top-1/2 h-px w-4 bg-app" /><span className="absolute bottom-0 left-0 h-px w-3 bg-app" /><span className="absolute right-0 top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-app" />
             </span>
           </span>
           <div className="min-w-0">
-            <p className="font-mono text-[9px] uppercase tracking-[0.1em] text-muted">Release manifest / {editing ? 'edit draft' : 'new draft'}</p>
-            <h2 className="mt-1 truncate text-[18px] font-medium tracking-[-0.025em] text-ink outline-none" id={titleId} ref={dialogTitleRef} tabIndex={-1}>{editing ? 'Edit release draft' : 'Prepare a release'}</h2>
+            <h2 className="truncate text-[22px] font-semibold tracking-[-0.03em] text-white outline-none" id={titleId} ref={dialogTitleRef} tabIndex={-1}>{editing ? 'Edit release' : 'Prepare a release'}</h2>
           </div>
-          <p className="ml-auto hidden font-mono text-[9px] uppercase tracking-[0.08em] text-muted sm:block">{completedChecks} of {manifestChecks.length} ready</p>
-          <span className="hidden border border-border px-2 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-text-soft sm:block">Draft</span>
-          <button aria-label="Close upload composer" className="grid size-10 shrink-0 place-items-center rounded-[7px] text-muted transition-colors hover:bg-surface-raised hover:text-ink" disabled={busy} onClick={onClose} type="button"><X className="size-4" aria-hidden="true" /></button>
+          <p className="ml-auto hidden text-[12px] text-white/65 sm:block">{completedChecks} of {manifestChecks.length} complete</p>
+          <button aria-label="Close upload composer" className="grid size-10 shrink-0 place-items-center rounded-full text-white/65 transition-colors hover:bg-white/10 hover:text-white" disabled={busy} onClick={onClose} type="button"><X className="size-4" aria-hidden="true" /></button>
         </header>
 
         <form className="flex min-h-0 flex-1 flex-col" onSubmit={(event) => void handleSubmit(event)}>
-          <div className="min-h-0 flex-1 overflow-y-auto lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:overflow-hidden">
-            <div className="manifest-paper bg-paper px-5 py-6 text-paper-ink sm:px-8 sm:py-8 lg:overflow-y-auto lg:px-10">
-              <div className="mx-auto max-w-[720px]">
+          <div className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_330px] lg:overflow-hidden">
+            <div className="min-w-0 lg:overflow-y-auto">
+            <div className="manifest-paper mx-auto w-full max-w-[920px] bg-paper px-5 py-7 text-paper-ink sm:px-8 sm:py-9 lg:px-12">
+              <div>
             <div className="flex items-center gap-3 border-b border-border pb-5">
               {activeChannel?.thumbnail_url ? <img alt="" className="size-9 rounded-[5px] border border-border object-cover" src={activeChannel.thumbnail_url} /> : <span className="grid size-9 place-items-center rounded-[5px] bg-rail font-mono text-[9px] text-white">YT</span>}
               <div className="min-w-0 flex-1">
-                <label className="text-[11px] font-medium text-muted" htmlFor={`${titleId}-channel`}>Destination channel</label>
+                <label className="text-[14px] font-medium text-muted" htmlFor={`${titleId}-channel`}>Destination channel</label>
                 {activeChannels.length > 0 ? (
                   <select
-                    className="mt-1 h-9 w-full max-w-sm rounded-[5px] border border-border bg-surface px-2.5 text-[13px] font-medium text-ink outline-none focus:border-brand"
+                    className="mt-1.5 h-10 w-full max-w-sm rounded-md border border-border bg-surface px-3 text-[14px] font-medium text-ink outline-none focus:border-brand"
                     disabled={busy}
                     id={`${titleId}-channel`}
                     onChange={(event) => setSelectedChannelId(event.target.value)}
@@ -384,20 +414,20 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
                 ) : (
                   <p className="mt-1 text-[13px] font-medium text-ink">YouTube channel required</p>
                 )}
-                {activeChannels.length === 0 ? <p className="mt-0.5 text-[11px] text-muted">Close this panel and connect a channel first.</p> : null}
+                {activeChannels.length === 0 ? <p className="mt-1 text-[13px] text-muted">Close this panel and connect a channel first.</p> : null}
               </div>
               {activeChannel ? <span className="status-label bg-status-ready-bg text-status-ready"><Check className="size-3" aria-hidden="true" />Connected</span> : null}
             </div>
 
             <section className="mt-7" aria-labelledby={`${videoInputId}-heading`}>
               <div className="flex items-end justify-between gap-4">
-                <div><p className="technical-label">01 / Media</p><h3 className="mt-1 text-[15px] font-medium text-ink" id={`${videoInputId}-heading`}>Source video</h3></div>
-                <span className="font-mono text-[9px] text-muted">CURRENT LIMIT {ACTIVE_UPLOAD_LIMIT_MB} MB</span>
+                <div><h3 className="text-[18px] font-semibold text-ink" id={`${videoInputId}-heading`}>Source video</h3></div>
+                  <span className="text-[13px] text-muted">Up to {ACTIVE_UPLOAD_LIMIT_MB} MB</span>
               </div>
               {editing ? (
                 <div className="mt-3 flex items-center gap-4 rounded-[8px] border border-border bg-surface px-4 py-5">
                   <span className="grid size-10 shrink-0 place-items-center rounded-[6px] bg-surface-subtle text-ink"><FileVideo2 className="size-5" strokeWidth={1.7} aria-hidden="true" /></span>
-                  <span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-medium text-ink">{sourceAsset?.original_filename ?? 'Stored source video'}</span><span className="mt-1 block text-[11px] text-muted">{sourceAsset ? `${humanFileSize(sourceAsset.size_bytes)} / private source preserved` : 'Private source preserved'}</span></span>
+                  <span className="min-w-0 flex-1"><span className="block truncate text-[14px] font-medium text-ink">{sourceAsset?.original_filename ?? 'Stored source video'}</span><span className="mt-1 block text-[12px] text-muted">{sourceAsset ? `${humanFileSize(sourceAsset.size_bytes)} / private source preserved` : 'Private source preserved'}</span></span>
                   <span className="font-mono text-[9px] uppercase tracking-[0.07em] text-status-paper-ready">Stored</span>
                 </div>
               ) : (
@@ -406,8 +436,8 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
                   <label className="mt-3 flex cursor-pointer items-center gap-4 rounded-[8px] border border-dashed border-border-strong bg-surface px-4 py-5 transition-colors hover:border-ink" htmlFor={videoInputId}>
                     <span className="grid size-10 shrink-0 place-items-center rounded-[6px] bg-surface-subtle text-ink"><UploadCloud className="size-5" strokeWidth={1.7} aria-hidden="true" /></span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] font-medium text-ink">{videoFile?.name ?? 'Choose a video from your device'}</span>
-                      <span className="mt-1 block text-[11px] text-muted">{videoFile ? `${humanFileSize(videoFile.size)} / ready for private transfer` : 'MP4, MOV, WebM, or another video format'}</span>
+                      <span className="block truncate text-[14px] font-medium text-ink">{videoFile?.name ?? 'Choose a video from your device'}</span>
+                      <span className="mt-1 block text-[12px] text-muted">{videoFile ? `${humanFileSize(videoFile.size)} / ready for private transfer` : 'MP4, MOV, WebM, or another video format'}</span>
                     </span>
                     <span className="button-secondary pointer-events-none">Browse</span>
                   </label>
@@ -416,8 +446,7 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
             </section>
 
             <section className="mt-8 border-t border-border pt-7" aria-labelledby={`${descriptionId}-details-heading`}>
-              <p className="technical-label">02 / Details</p>
-              <h3 className="mt-1 text-[15px] font-medium text-ink" id={`${descriptionId}-details-heading`}>YouTube metadata</h3>
+              <h3 className="text-[18px] font-semibold text-ink" id={`${descriptionId}-details-heading`}>Video details</h3>
               <div className="mt-4">
                 <label className="field-label" htmlFor={`${descriptionId}-title`}>Title</label>
                 <input aria-invalid={unicodeCharacterLength(title.trim()) > YOUTUBE_TITLE_MAX_CHARACTERS || /[<>]/.test(title)} className="field-input" disabled={busy} id={`${descriptionId}-title`} onChange={(event) => setTitle(event.target.value)} placeholder="A clear title for this release" value={title} />
@@ -448,14 +477,13 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
             </section>
 
             <section className="mt-8 border-t border-border pt-7" aria-labelledby={`${descriptionId}-release-heading`}>
-              <p className="technical-label">03 / Release</p>
-              <h3 className="mt-1 text-[15px] font-medium text-ink" id={`${descriptionId}-release-heading`}>Audience and visibility</h3>
+              <h3 className="text-[18px] font-semibold text-ink" id={`${descriptionId}-release-heading`}>Release settings</h3>
 
               <fieldset className="mt-4">
                 <legend className="field-label">Is this video made for kids?</legend>
                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
                   {([['not-kids', 'No, it is not made for kids'], ['kids', 'Yes, it is made for kids']] as const).map(([value, label]) => (
-                    <label className="flex cursor-pointer items-center gap-2.5 rounded-[6px] border border-border bg-surface px-3 py-3 text-[12px] text-ink has-[:checked]:border-ink" key={value}>
+                    <label className="flex cursor-pointer items-center gap-2.5 rounded-md border border-border bg-surface px-3 py-3 text-[13px] text-ink has-[:checked]:border-brand" key={value}>
                       <input checked={audience === value} disabled={busy} name="audience" onChange={() => setAudience(value)} type="radio" />{label}
                     </label>
                   ))}
@@ -488,9 +516,9 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
               ) : null}
 
               <div className="mt-5 space-y-2">
-                <label className="flex cursor-pointer items-start gap-2.5 text-[12px] leading-5 text-ink"><input checked={containsSyntheticMedia} className="mt-1" disabled={busy} onChange={(event) => setContainsSyntheticMedia(event.target.checked)} type="checkbox" /><span>This video contains realistic altered or synthetic media.</span></label>
-                <label className="flex cursor-pointer items-start gap-2.5 text-[12px] leading-5 text-ink"><input checked={notifySubscribers} className="mt-1" disabled={busy} onChange={(event) => setNotifySubscribers(event.target.checked)} type="checkbox" /><span>Notify subscribers when YouTube publishes this video.</span></label>
-                <label className="flex items-start gap-2.5 text-[12px] leading-5 text-muted"><input className="mt-1" required type="checkbox" /><span>I confirm that this upload follows YouTube's Terms of Service and Community Guidelines.</span></label>
+                <label className="flex cursor-pointer items-start gap-2.5 text-[13px] leading-5 text-ink"><input checked={containsSyntheticMedia} className="mt-1" disabled={busy} onChange={(event) => setContainsSyntheticMedia(event.target.checked)} type="checkbox" /><span>This video contains realistic altered or synthetic media.</span></label>
+                <label className="flex cursor-pointer items-start gap-2.5 text-[13px] leading-5 text-ink"><input checked={notifySubscribers} className="mt-1" disabled={busy} onChange={(event) => setNotifySubscribers(event.target.checked)} type="checkbox" /><span>Notify subscribers when YouTube publishes this video.</span></label>
+                <label className="flex items-start gap-2.5 text-[13px] leading-5 text-muted"><input className="mt-1" required type="checkbox" /><span>I confirm that this upload follows YouTube's Terms of Service and Community Guidelines.</span></label>
               </div>
             </section>
 
@@ -498,73 +526,37 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
               </div>
             </div>
 
-            <aside className="bg-surface text-body lg:overflow-y-auto" aria-label="Manifest inspection">
-              <div className="border-b border-border px-5 py-5">
-                <p className="font-mono text-[9px] uppercase tracking-[0.09em] text-muted-soft">Manifest inspection</p>
-                <div className="mt-2 flex items-end justify-between gap-4">
-                  <p className="text-[15px] font-medium text-ink">Readiness</p>
-                  <p className="font-mono text-[11px] text-brand">{completedChecks}/{manifestChecks.length}</p>
-                </div>
-                <div className="mt-3 h-0.5 bg-surface-raised">
-                  <div className="h-full bg-brand transition-[width]" style={{ width: `${(completedChecks / manifestChecks.length) * 100}%` }} />
-                </div>
+            </div>
+            <aside className="hidden border-l border-border bg-[#121415] text-paper-ink lg:flex lg:flex-col lg:overflow-y-auto" aria-label="YouTube release preview">
+              <div className="border-b border-border px-6 py-5">
+                <p className="text-[16px] font-semibold tracking-[-0.02em] text-paper-ink">YouTube preview</p>
+                <p className="mt-1 text-[12px] leading-5 text-paper-ink/55">A live reference for what you are preparing.</p>
               </div>
-
-              <div className="border-b border-border px-5 py-5">
-                <div className="aspect-video border border-border bg-app p-4">
-                  <div className="flex h-full flex-col justify-between">
-                    <div className="flex justify-between font-mono text-[8px] uppercase tracking-[0.08em] text-muted-soft"><span>Source record</span><span>{videoFile ? humanFileSize(videoFile.size) : sourceAsset ? humanFileSize(sourceAsset.size_bytes) : 'Awaiting file'}</span></div>
-                    <div>
-                      <FileVideo2 className="size-6 text-brand" strokeWidth={1.5} aria-hidden="true" />
-                      <p className="mt-3 truncate text-[12px] font-medium text-text-soft">{videoFile?.name ?? sourceAsset?.original_filename ?? 'No source selected'}</p>
-                      <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.08em] text-muted-soft">{editing ? 'Private source preserved' : 'Private storage first'}</p>
-                    </div>
+              <div className="flex flex-1 flex-col justify-center px-6 py-8">
+                <div className="overflow-hidden rounded-xl border border-white/10 bg-[#202324] shadow-[0_16px_40px_rgba(0,0,0,0.28)]">
+                  <div className="relative aspect-video overflow-hidden bg-[#2a2d2e]">
+                    {thumbnailPreviewUrl ? <img alt="Selected custom thumbnail preview" className="h-full w-full object-cover" src={thumbnailPreviewUrl} /> : <div className="grid h-full place-items-center bg-[radial-gradient(circle_at_60%_20%,rgba(216,173,103,0.22),transparent_42%),linear-gradient(145deg,#303435,#1a1c1d)]"><span className="grid size-12 place-items-center rounded-full border border-white/20 bg-black/35 text-brand"><Play className="ml-0.5 size-5 fill-current" aria-hidden="true" /></span></div>}
+                    <span className="absolute bottom-2 right-2 rounded bg-black/80 px-1.5 py-0.5 text-[10px] font-medium text-white">Video</span>
+                  </div>
+                  <div className="p-4">
+                    <div className="flex gap-2.5"><span className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-full bg-brand/20 text-[10px] font-semibold text-brand">{activeChannel?.title.slice(0, 1).toUpperCase() ?? 'YT'}</span><div className="min-w-0"><p className="line-clamp-2 text-[13px] font-semibold leading-5 text-white">{title.trim() || 'Your video title appears here'}</p><p className="mt-1 truncate text-[11px] text-white/50">{activeChannel?.title ?? 'Select a destination channel'}</p></div></div>
+                    <p className="mt-3 line-clamp-3 text-[11px] leading-5 text-white/45">{description.trim() || 'Add a description to give your viewers context.'}</p>
                   </div>
                 </div>
-              </div>
-
-              <dl className="divide-y divide-border border-b border-border px-5">
-                {manifestChecks.map((check) => (
-                  <div className="flex items-start justify-between gap-4 py-3" key={check.label}>
-                    <div className="min-w-0"><dt className="text-[11px] text-muted">{check.label}</dt><dd className="mt-0.5 truncate text-[11px] text-text-soft">{check.detail}</dd></div>
-                    <span className={check.complete ? 'font-mono text-[9px] uppercase tracking-[0.07em] text-status-ready' : 'font-mono text-[9px] uppercase tracking-[0.07em] text-muted-soft'}>{check.complete ? 'Ready' : 'Needed'}</span>
-                  </div>
-                ))}
-              </dl>
-
-              <div className="border-b border-border px-5 py-5">
-                <p className="font-mono text-[9px] uppercase tracking-[0.09em] text-muted-soft">Transfer contract</p>
-                <ol className="mt-4 space-y-3">
-                  {[
-                    ...(editing ? [
-                      ['01', 'Preserve private source media'],
-                      ['02', 'Validate YouTube metadata'],
-                      ['03', 'Update owner-scoped draft'],
-                    ] : [
-                      ['01', `Upload to ${STORAGE_BUCKETS.video}`],
-                      ['02', 'Write owner-scoped media record'],
-                      ['03', 'Create draft in release ledger'],
-                    ]),
-                  ].map(([number, label]) => (
-                    <li className="flex items-center gap-3 text-[11px] text-text-soft" key={number}><span className="font-mono text-[9px] text-brand">{number}</span><span>{label}</span></li>
-                  ))}
-                </ol>
-                <p className="mt-4 text-[10px] leading-5 text-muted">Saving does not claim a YouTube upload or scheduled release. Those states appear only after YouTube confirms them.</p>
-              </div>
-
-              <div className="px-5 py-5">
-                <p className="font-mono text-[9px] uppercase tracking-[0.09em] text-muted-soft">Release target</p>
-                <p className="mt-2 text-[13px] font-medium text-ink">{scheduleEnabled && validScheduledDate ? validScheduledDate.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : scheduleEnabled ? 'Target time required' : `${privacy[0].toUpperCase()}${privacy.slice(1)} intent`}</p>
-                <p className="mt-1 text-[10px] text-muted">{timezone.replaceAll('_', ' ')}</p>
+                <div className="mt-6 rounded-lg border border-white/10 bg-white/[0.03] p-4">
+                  <div className="flex items-center justify-between gap-3"><span className="text-[12px] text-paper-ink/55">Readiness</span><span className="text-[12px] font-semibold text-brand">{completedChecks}/{manifestChecks.length}</span></div>
+                  <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-brand transition-[width] duration-300" style={{ width: `${(completedChecks / manifestChecks.length) * 100}%` }} /></div>
+                  <p className="mt-3 text-[11px] leading-5 text-paper-ink/55">{scheduleEnabled && validScheduledDate ? `Target: ${validScheduledDate.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}` : scheduleEnabled ? 'Choose a target time to schedule.' : 'This release will remain private.'}</p>
+                </div>
               </div>
             </aside>
           </div>
 
           <footer className="flex shrink-0 flex-col gap-3 border-t border-border bg-app px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <p className="flex items-center gap-2 text-[10px] leading-5 text-muted"><FileVideo2 className="size-3.5 shrink-0" aria-hidden="true" />{editing ? 'Private source preserved → draft metadata updated' : 'Private storage → owner record → draft ledger'}</p>
+            <p className="flex items-center gap-2 text-[12px] leading-5 text-muted"><FileVideo2 className="size-3.5 shrink-0" aria-hidden="true" />{editing ? 'Private source preserved → draft metadata updated' : 'Private storage → owner record → draft ledger'}</p>
             <div className="flex items-center justify-end gap-2">
-              <button className="inline-flex h-10 items-center justify-center rounded-[7px] px-3.5 text-[12px] font-medium text-muted transition-colors hover:bg-surface-raised hover:text-ink disabled:opacity-45" disabled={busy} onClick={onClose} type="button">Cancel</button>
-              <button className="inline-flex h-10 min-w-44 items-center justify-center gap-2 rounded-[7px] bg-brand px-4 text-[12px] font-semibold text-brand-ink transition-colors hover:bg-brand-hover disabled:opacity-45" disabled={busy || channelsQuery.isLoading || !activeChannel} type="submit">
+              <button className="inline-flex h-10 items-center justify-center rounded-md px-3.5 text-[13px] font-medium text-muted transition-colors hover:bg-surface-raised hover:text-ink disabled:opacity-45" disabled={busy} onClick={onClose} type="button">Cancel</button>
+              <button className="inline-flex h-10 min-w-44 items-center justify-center gap-2 rounded-md bg-brand px-4 text-[13px] font-semibold text-brand-ink transition-colors hover:bg-brand-hover disabled:opacity-45" disabled={busy || channelsQuery.isLoading || !activeChannel} type="submit">
                 {busy ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : editing ? <Check className="size-4" aria-hidden="true" /> : <UploadCloud className="size-4" aria-hidden="true" />}
                 {phaseLabel(phase, editing)}
               </button>

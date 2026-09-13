@@ -9,4 +9,7 @@ if (!baseUrl || !anonKey) {
   )
 }
 
+// The browser client keeps its refresh session in an httpOnly cookie. On a
+// cold load, AuthProvider calls getCurrentUser() to restore that session before
+// routes render, so users stay signed in until they sign out or it expires.
 export const insforge = createClient({ baseUrl, anonKey })
