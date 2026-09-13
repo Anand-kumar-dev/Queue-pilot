@@ -1,0 +1,194 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    font-family: "Instrument Sans Variable", Inter, ui-sans-serif, system-ui, sans-serif;
+    color: #c8c8c0;
+    background: #0a0a09;
+    color-scheme: dark;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    min-width: 320px;
+    min-height: 100%;
+    background: #0a0a09;
+  }
+
+  body {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  ::selection {
+    color: #1d0c08;
+    background: #ff795d;
+  }
+
+  :focus-visible {
+    outline: 2px solid #ff795d;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .technical-label {
+    @apply font-mono text-[10px] uppercase tracking-[0.08em] text-muted;
+  }
+
+  .button-primary {
+    @apply inline-flex h-9 items-center justify-center gap-2 rounded-[7px] bg-brand px-3.5 text-[13px] font-semibold text-brand-ink transition-colors duration-150 hover:bg-brand-hover disabled:opacity-45;
+  }
+
+  .button-secondary {
+    @apply inline-flex h-9 items-center justify-center gap-2 rounded-[7px] border border-border bg-surface-raised px-3.5 text-[13px] font-medium text-ink transition-colors duration-150 hover:border-border-strong hover:bg-surface-hover disabled:opacity-45;
+  }
+
+  .button-ghost {
+    @apply inline-flex h-9 items-center justify-center gap-2 rounded-[7px] px-3 text-[13px] font-medium text-muted transition-colors duration-150 hover:bg-surface-subtle hover:text-ink disabled:opacity-45;
+  }
+
+  .icon-button {
+    @apply grid size-9 place-items-center rounded-[7px] text-muted transition-colors duration-150 hover:bg-surface-subtle hover:text-ink disabled:opacity-45;
+  }
+
+  .field-label {
+    @apply block text-[13px] font-medium text-ink;
+  }
+
+  .field-input {
+    @apply mt-1.5 h-11 w-full rounded-[7px] border border-border bg-surface-raised px-3 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted-soft focus:border-brand focus:ring-2 focus:ring-brand/10;
+  }
+
+  .field-hint {
+    @apply mt-1.5 text-xs leading-5 text-muted;
+  }
+
+  .notice-success {
+    @apply border-l-2 border-status-ready bg-status-ready-bg px-3 py-2.5 text-[13px] leading-5 text-status-ready;
+  }
+
+  .notice-warning {
+    @apply border-l-2 border-status-warning bg-status-warning-bg px-3 py-2.5 text-[13px] leading-5 text-status-warning;
+  }
+
+  .notice-danger {
+    @apply border-l-2 border-status-danger bg-status-danger-bg px-3 py-2.5 text-[13px] leading-5 text-status-danger;
+  }
+
+  .status-label {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-medium;
+  }
+
+  .sidebar-link {
+    @apply flex h-9 w-full items-center gap-2.5 rounded-[7px] px-2.5 text-[13px] font-medium text-white/55 transition-colors duration-150 hover:bg-white/[0.055] hover:text-white;
+  }
+
+  .summary-card {
+    @apply flex items-center gap-3 border-r border-border px-4 last:border-r-0;
+  }
+
+  .summary-icon {
+    @apply grid size-8 place-items-center rounded-[5px];
+  }
+
+  .view-tab {
+    @apply flex h-8 items-center gap-1.5 border-b-2 border-transparent px-2 text-xs font-medium text-muted transition-colors duration-150 hover:text-ink;
+  }
+
+  .view-tab-active {
+    @apply border-ink text-ink;
+  }
+
+  .paper-control {
+    color-scheme: light;
+  }
+
+  .manifest-label {
+    @apply block text-[12px] font-medium text-paper-ink;
+  }
+
+  .manifest-input {
+    color-scheme: light;
+    @apply mt-1.5 h-11 w-full rounded-[7px] border border-paper-line bg-paper-raised px-3 text-sm text-paper-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-paper-ink/35 focus:border-brand focus:ring-2 focus:ring-brand/15;
+  }
+
+  .manifest-hint {
+    @apply mt-1.5 text-[11px] leading-5 text-paper-ink/50;
+  }
+
+  .manifest-choice {
+    @apply flex cursor-pointer items-start gap-2.5 border border-paper-line bg-paper-raised px-3 py-3 text-[12px] leading-5 text-paper-ink transition-colors has-[:checked]:border-brand has-[:checked]:bg-paper-soft;
+  }
+
+  .manifest-paper .text-ink,
+  .manifest-paper .field-label {
+    color: #151612 !important;
+  }
+
+  .manifest-paper .text-muted,
+  .manifest-paper .field-hint {
+    color: rgb(21 22 18 / 0.56) !important;
+  }
+
+  .manifest-paper .text-muted-soft,
+  .manifest-paper .technical-label {
+    color: rgb(21 22 18 / 0.4) !important;
+  }
+
+  .manifest-paper .border-border,
+  .manifest-paper .border-border-strong {
+    border-color: #d8d2c5 !important;
+  }
+
+  .manifest-paper .bg-surface,
+  .manifest-paper .bg-surface-raised {
+    background-color: #fffefa !important;
+  }
+
+  .manifest-paper .bg-surface-subtle {
+    background-color: #f3f0e8 !important;
+  }
+
+  .manifest-paper .field-input {
+    color-scheme: light;
+    border-color: #d8d2c5;
+    background-color: #fffefa;
+    color: #151612;
+  }
+
+  .manifest-paper .field-input::placeholder {
+    color: rgb(21 22 18 / 0.35);
+  }
+
+  .manifest-paper .button-secondary {
+    border-color: #d8d2c5;
+    background-color: #fffefa;
+    color: #151612;
+  }
+}
