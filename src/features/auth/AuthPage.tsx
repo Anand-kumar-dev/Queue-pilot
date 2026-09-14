@@ -58,11 +58,11 @@ function Field({
 }
 
 function GoogleMark() {
-  return <span aria-hidden="true" className="grid size-4 place-items-center font-sans text-[15px] font-bold leading-none text-[#e9c985]">G</span>
+  return <svg aria-hidden="true" className="size-4" viewBox="0 0 24 24"><path d="M21.35 12.23c0-.72-.06-1.2-.2-1.7H12v3.58h5.37c-.11.89-.72 2.23-2.08 3.13l-.02.12 3.02 2.29.21.02c1.93-1.74 2.85-4.3 2.85-7.44Z" fill="#4285F4" /><path d="M12 21.5c2.63 0 4.83-.85 6.44-2.32l-3.07-2.43c-.82.56-1.92.95-3.37.95a5.84 5.84 0 0 1-5.54-3.98l-.12.01-3.14 2.38-.04.11A9.69 9.69 0 0 0 12 21.5Z" fill="#34A853" /><path d="M6.46 13.72A5.7 5.7 0 0 1 6.15 12c0-.6.11-1.18.3-1.72v-.12L3.27 7.74l-.1.04A9.34 9.34 0 0 0 2.5 12c0 1.51.36 2.94.67 4.22l3.29-2.5Z" fill="#FBBC05" /><path d="M12 6.3c1.83 0 3.07.78 3.77 1.43l2.75-2.63C16.82 3.55 14.63 2.5 12 2.5a9.69 9.69 0 0 0-8.83 5.28l3.29 2.5A5.84 5.84 0 0 1 12 6.3Z" fill="#EA4335" /></svg>
 }
 
 function GitHubMark() {
-  return <span aria-hidden="true" className="grid size-4 place-items-center rounded-full bg-ink text-[8px] font-bold text-app">GH</span>
+  return <svg aria-hidden="true" className="size-4 fill-ink" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 0 0-3 18.51c.48.09.65-.2.65-.46v-1.68c-2.65.57-3.2-1.1-3.2-1.1-.43-1.08-1.05-1.37-1.05-1.37-.86-.58.07-.57.07-.57.95.07 1.45.96 1.45.96.85 1.44 2.23 1.02 2.77.78.09-.6.33-1.02.6-1.26-2.12-.24-4.35-1.05-4.35-4.69 0-1.04.38-1.89.98-2.55-.1-.24-.42-1.21.1-2.52 0 0 .8-.25 2.62.97A9.1 9.1 0 0 1 12 7.25c.81 0 1.62.11 2.38.32 1.82-1.22 2.61-.97 2.61-.97.53 1.31.2 2.28.1 2.52.61.66.98 1.51.98 2.55 0 3.65-2.23 4.44-4.35 4.68.34.29.65.85.65 1.72v2.48c0 .26.17.56.65.46A9.5 9.5 0 0 0 12 2.5Z" /></svg>
 }
 
 export function AuthPage() {

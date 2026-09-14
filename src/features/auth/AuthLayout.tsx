@@ -35,7 +35,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
               {[
                 [CalendarClock, 'Release planning', 'Keep target times and YouTube confirmations distinct.'],
                 [FileVideo2, 'Private media first', 'Save source media and metadata before it reaches YouTube.'],
-                [ShieldCheck, 'One connected channel', 'Your YouTube permission stays separate from app sign-in.'],
+                [ShieldCheck, 'Channel connections on your terms', 'Connect one or more YouTube channels separately from app sign-in.'],
               ].map(([Icon, title, detail]) => {
                 const FeatureIcon = Icon as typeof CalendarClock
                 return <div className="flex gap-3.5" key={title as string}><span className="grid size-9 shrink-0 place-items-center rounded-md bg-surface-raised text-brand"><FeatureIcon className="size-4" /></span><div><p className="text-[14px] font-semibold text-ink">{title as string}</p><p className="mt-0.5 text-[12px] leading-5 text-muted">{detail as string}</p></div></div>

@@ -22,6 +22,8 @@ pnpm-debug.log*
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
+*.lnk
 *.suo
 *.ntvs*
 *.njsproj
@@ -42,3 +44,12 @@ pnpm-debug.log*
 .roo
 .trae
 .windsurf
+
+# Local browser automation and captured secrets
+.agent-browser
+agent-browser
+auth-state*.json
+*.har
+test-recordings
+tmp-*.png
+tmp-*.webm

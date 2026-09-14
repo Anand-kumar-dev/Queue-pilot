@@ -1,76 +1,91 @@
-# QueuePilot app
+# QueuePilot
 
-QueuePilot is a personal YouTube publishing desk for preparing private media,
-queuing uploads, and reconciling YouTube-confirmed schedule/publication state.
+QueuePilot is a focused YouTube publishing workspace. It gives a creator one
+place to prepare a release, keep source media private, schedule it for a
+connected channel, and follow the real state reported by YouTube.
 
-The app includes responsive application chrome, guarded routes, live InsForge
-authentication, account creation and verification, password recovery, and a
-server-side YouTube channel authorization boundary. The release desk reads only
-real per-user records: users can upload private media, create and edit drafts,
-queue a release for YouTube, filter the ledger, inspect a weekly calendar, and
-delete drafts through a server-owned cleanup path. There is no fabricated
-release data.
+**Live demo:** [queuepilot.anandd.dev](https://queuepilot.anandd.dev)
 
-The server-owned YouTube transfer and status workers run on InsForge schedules.
-A release is called scheduled only after YouTube confirms a future `publishAt`.
+### Sign in
 
-## Stack
+![QueuePilot sign-in](docs/media/sign-in.png)
 
-- React 19, TypeScript, and Vite
-- Tailwind CSS 3.4
-- InsForge SDK for auth, database, storage, and edge functions
+### Publishing calendar
+
+![QueuePilot publishing calendar](docs/media/publishing-calendar.png)
+
+### Release preparation
+
+![QueuePilot release preparation](docs/media/release-schedule.png)
+
+### Schedule for YouTube
+
+![QueuePilot release timing](docs/media/release-timing.png)
+
+## What it does
+
+- Sign in with email, Google, or GitHub.
+- Connect more than one YouTube channel without mixing channel access with app login.
+- Upload a video and optional custom thumbnail to private storage.
+- Prepare metadata, audience settings, visibility, tags, and a target release time.
+- Queue the release for YouTube and see its real draft, transfer, scheduled, published, or failed state.
+- Browse releases in a filterable list or weekly publishing calendar.
+
+QueuePilot does not show made-up metrics or pretend a release is scheduled
+before YouTube confirms it.
+
+## Quick look
+
+Open the [live app](https://queuepilot.anandd.dev), sign in, connect a YouTube
+channel, then create or schedule a release from the workspace.
+
+## Built with
+
+- React, TypeScript, Vite, and Tailwind CSS
+- InsForge for authentication, Postgres, private storage, edge functions, and schedules
 - TanStack Query for server state
-- Vitest and Testing Library
+- YouTube Data API for channel access, resumable uploads, and release status
 
-## Local setup
+## Run locally
 
-1. Install dependencies with `npm install`.
-2. Copy `.env.example` to `.env.local`.
-3. Add the public InsForge base URL and anonymous key. Never put an InsForge
-   admin key in a `VITE_` variable.
-4. Run `npm run dev`.
-
-The database migrations include the atomic draft lifecycle and server-owned
-YouTube queue lifecycle. Apply them only after a rollback/export path is
-available:
-
-```text
-npx -y @insforge/cli db migrations up --all
+```bash
+npm install
+Copy-Item .env.example .env.local
+npm run dev
 ```
 
-The workspace is already linked to its InsForge project through ignored local
-CLI configuration. See [DESIGN.md](./DESIGN.md) for the product UI rules and
-[docs/production-deployment.md](./docs/production-deployment.md) for the live
-deployment contract.
+Add your InsForge URL and public anonymous key to `.env.local`. Keep all admin
+keys, OAuth client secrets, refresh tokens, and browser auth-state files out of
+Git.
 
-The connected InsForge 1.0 backend currently enforces a 200 MB upload ceiling.
-The UI must communicate that limit until the backend storage path is upgraded
-and a larger storage-to-YouTube recovery path is verified.
+Useful checks:
 
-## Authentication and YouTube authorization
-
-QueuePilot login and YouTube channel access are deliberately separate grants:
-
-- InsForge owns the app session, email verification, password reset, and
-  optional Google/GitHub app login.
-- The `youtube-oauth` edge function owns YouTube consent, PKCE state, token
-  exchange, encrypted refresh-token storage, channel lookup, and revocation.
-- `youtube-publishing`, `youtube-upload-pump`, and `youtube-upload-status`
-  own queue actions, private transfer, and YouTube status reconciliation.
-- No Google OAuth client secret or YouTube refresh token is exposed to React or
-  stored in this repository.
-
-The live app runs at `https://pzmh35a7.insforge.site`. The Google Cloud web
-OAuth client must retain this exact authorized redirect URI:
-
-```text
-https://pzmh35a7.function2.insforge.app/youtube-oauth
+```bash
+npm run lint
+npm run build
 ```
 
-See [docs/production-deployment.md](./docs/production-deployment.md) before
-changing the production domain, OAuth callback, or server secrets.
+## How publishing works
 
-## Quality checks
+1. The browser stores video files in a private, owner-scoped bucket.
+2. The app creates a release record and submits it to the server-owned YouTube queue.
+3. InsForge workers transfer the video with YouTube's resumable upload protocol.
+4. QueuePilot reconciles the YouTube response and updates the release state.
 
-Run `npm run typecheck`, `npm run lint`, `npm run test`, and `npm run build`
-before handing off a milestone.
+Google and GitHub app login are separate from the YouTube OAuth permission.
+YouTube tokens are encrypted and remain server-side.
+
+## Project structure
+
+```text
+src/           React application
+functions/     InsForge edge functions and workers
+migrations/    Database schema and publishing lifecycle
+public/        Public app assets
+docs/media/    README screenshots
+```
+
+## Current limit
+
+The deployed InsForge storage path accepts source videos up to **200 MB**. The
+interface enforces and communicates that limit.

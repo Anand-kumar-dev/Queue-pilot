@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://queuepilot.anandd.dev/sitemap.xml

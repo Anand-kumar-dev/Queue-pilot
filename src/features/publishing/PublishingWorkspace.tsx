@@ -18,6 +18,7 @@ import {
   Tags,
   Trash2,
   RotateCcw,
+  UploadCloud,
   X,
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
@@ -165,15 +166,21 @@ function Masthead({
   accountLabel,
   onNewUpload,
   onSignOut,
+  search,
+  setSearch,
+  timezone,
 }: {
   accountEmail: string
   accountLabel: string
   onNewUpload: () => void
   onSignOut: () => void | Promise<void>
+  search: string
+  setSearch: (value: string) => void
+  timezone: string
 }) {
   return (
-    <header className="border-b border-border bg-surface">
-      <div className="mx-auto flex h-14 w-full max-w-[1600px] items-center gap-3 px-4 sm:px-6 lg:px-7">
+    <header className="shrink-0 border-b border-border bg-surface">
+      <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center gap-3 px-4 sm:px-6 lg:px-7">
         <div className="flex min-w-0 items-center gap-3 lg:hidden">
           <RunwayMark />
           <div className="min-w-0">
@@ -186,11 +193,13 @@ function Masthead({
           <label className="relative block max-w-sm">
             <span className="sr-only">Search your workspace</span>
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-soft" />
-            <input className="h-8 w-full rounded-md border border-border bg-app pl-8 pr-3 text-[11px] text-text-soft outline-none placeholder:text-muted-soft focus:border-brand" placeholder="Search posts, ideas, or anything…" type="search" />
+            <input className="h-9 w-full rounded-lg border border-border bg-app pl-8 pr-14 text-[12px] text-text-soft outline-none transition-colors placeholder:text-muted-soft focus:border-brand" onChange={(event) => setSearch(event.target.value)} placeholder="Search videos, drafts, or ideas" type="search" value={search} />
+            <kbd className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded border border-border bg-surface-raised px-1.5 py-0.5 font-mono text-[9px] text-muted">Cmd K</kbd>
           </label>
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          <span className="hidden h-9 items-center rounded-lg border border-border bg-app px-3 text-[11px] text-muted lg:inline-flex">{timezone.replaceAll('_', ' ')}</span>
           <button aria-label="Create post" className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-brand px-4 text-[12px] font-semibold text-brand-ink transition-colors hover:bg-brand-hover" onClick={onNewUpload} type="button">
             <Plus className="size-4" aria-hidden="true" />
             <span className="hidden sm:inline">Create post</span>
@@ -227,12 +236,12 @@ function WorkspaceSidebar({
   view: ReleaseView
 }) {
   const navItem = (active: boolean) => cn(
-    'flex h-10 w-full items-center gap-3 rounded-md px-3 text-left text-[14px] font-medium transition-colors',
-    active ? 'bg-surface-subtle text-ink' : 'text-muted hover:bg-surface-raised hover:text-ink',
+    'relative flex h-10 w-full items-center gap-3 rounded-lg px-3 text-left text-[13px] font-medium transition-colors',
+    active ? 'bg-surface-subtle text-ink before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-brand' : 'text-muted hover:bg-surface-raised hover:text-ink',
   )
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-rail p-4 lg:flex">
+    <aside className="hidden h-full w-60 shrink-0 flex-col border-r border-border bg-rail px-3 py-4 lg:flex">
       <div className="flex items-center gap-3 px-2 py-2">
         <RunwayMark />
         <div>
@@ -240,12 +249,13 @@ function WorkspaceSidebar({
         </div>
       </div>
 
-      <button className="mt-7 inline-flex h-10 items-center justify-center gap-2 rounded-md bg-brand px-3 text-[13px] font-semibold text-brand-ink transition-all hover:bg-brand-hover active:scale-[0.98]" onClick={onNewUpload} type="button">
+      <button className="mt-6 inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-brand px-3 text-[13px] font-semibold text-brand-ink transition-all hover:bg-brand-hover active:scale-[0.98]" onClick={onNewUpload} type="button">
         <Plus className="size-4" aria-hidden="true" />
         Create post
       </button>
 
-      <nav className="mt-5" aria-label="Workspace navigation">
+      <nav className="mt-6" aria-label="Workspace navigation">
+        <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-soft">Workspace</p>
         <div className="grid gap-1">
           <button aria-current={view === 'calendar' ? 'page' : undefined} className={navItem(view === 'calendar')} onClick={() => setView('calendar')} type="button">
             <CalendarDays className="size-4" aria-hidden="true" />
@@ -259,13 +269,13 @@ function WorkspaceSidebar({
       </nav>
 
       <div className="mt-8">
-        <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-soft">Channel</p>
-        <div className="rounded-lg border border-border bg-surface-raised p-3">
+        <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-soft">Channels</p>
+        <div className="rounded-lg border border-border bg-surface-raised p-3 transition-colors hover:border-border-strong">
           <div className="flex items-center gap-2.5">
             <span className="grid size-8 place-items-center rounded-full bg-app text-[9px] font-semibold text-brand">YT</span>
             <div className="min-w-0">
               <p className="text-[13px] font-semibold text-ink">YouTube</p>
-              <p className="mt-0.5 text-[12px] text-muted">{channelCount} {channelCount === 1 ? 'channel' : 'channels'} connected</p>
+              <p className="mt-0.5 text-[11px] text-muted">{channelCount} {channelCount === 1 ? 'channel' : 'channels'} connected</p>
             </div>
           </div>
         </div>
@@ -279,6 +289,19 @@ function WorkspaceSidebar({
         </div>
       </div>
     </aside>
+  )
+}
+
+function MobileWorkspaceNav({ onNewUpload, setView, view }: { onNewUpload: () => void; setView: (view: ReleaseView) => void; view: ReleaseView }) {
+  const itemClass = (active: boolean) => cn('flex min-w-16 flex-col items-center gap-1 rounded-lg px-3 py-2 text-[10px] font-medium transition-colors', active ? 'bg-surface-subtle text-brand' : 'text-muted hover:text-ink')
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-rail/95 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:hidden" aria-label="Mobile workspace navigation">
+      <div className="mx-auto flex max-w-md items-center justify-around">
+        <button aria-current={view === 'calendar' ? 'page' : undefined} className={itemClass(view === 'calendar')} onClick={() => setView('calendar')} type="button"><CalendarDays className="size-4" aria-hidden="true" />Calendar</button>
+        <button className="grid size-11 place-items-center rounded-xl bg-brand text-brand-ink shadow-[0_8px_20px_rgba(216,173,103,0.22)]" onClick={onNewUpload} type="button"><Plus className="size-5" aria-hidden="true" /><span className="sr-only">Create post</span></button>
+        <button aria-current={view === 'list' ? 'page' : undefined} className={itemClass(view === 'list')} onClick={() => setView('list')} type="button"><FileVideo2 className="size-4" aria-hidden="true" />Releases</button>
+      </div>
+    </nav>
   )
 }
 
@@ -338,37 +361,39 @@ function StageRail({ activeLane, counts, setActiveLane }: { activeLane: ReleaseL
 
 function PublishingSummary({ counts, onSelectLane }: { counts: Record<ReleaseLane, number>; onSelectLane: (lane: ReleaseLane) => void }) {
   const cards: Array<{ lane: ReleaseLane; icon: typeof FileVideo2; note: string }> = [
-    { lane: 'drafts', icon: FileVideo2, note: 'Start creating' },
-    { lane: 'scheduled', icon: Clock3, note: 'On the calendar' },
-    { lane: 'published', icon: Send, note: 'Live on YouTube' },
-    { lane: 'issues', icon: CircleX, note: 'Needs attention' },
+    { lane: 'drafts', icon: FileVideo2, note: 'Ideas waiting to be published' },
+    { lane: 'scheduled', icon: Clock3, note: 'Planned for the next 7 days' },
+    { lane: 'published', icon: Send, note: 'Published through QueuePilot' },
+    { lane: 'issues', icon: CircleX, note: 'Needs your attention' },
   ]
 
   return (
     <section aria-label="Publishing summary" className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map(({ lane, icon: Icon, note }) => (
-        <button className={cn('group flex min-h-[78px] items-center gap-3 rounded-lg border border-border bg-surface px-4 text-left transition-all hover:-translate-y-px hover:border-border-strong hover:bg-surface-raised', lane === 'drafts' && 'border-brand/30 bg-[#2b2417]')} key={lane} onClick={() => onSelectLane(lane)} type="button">
+        <button className={cn('group flex min-h-[88px] items-center gap-3 rounded-xl border border-border bg-surface px-4 text-left transition-all hover:-translate-y-px hover:border-border-strong hover:bg-surface-raised', lane === 'drafts' && 'border-brand/30 bg-[#2b2417]')} key={lane} onClick={() => onSelectLane(lane)} type="button">
           <span className={cn('grid size-9 shrink-0 place-items-center rounded-md border border-border bg-app text-muted transition-colors group-hover:text-brand', lane === 'drafts' && 'border-brand/30 bg-brand/10 text-brand')}><Icon className="size-4" strokeWidth={1.7} aria-hidden="true" /></span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[13px] font-medium text-ink">{LANE_COPY[lane].label}</span>
-            <span className="mt-0.5 block text-[11px] text-muted">{note}</span>
+            <span className="block text-[13px] font-semibold text-ink">{LANE_COPY[lane].label}</span>
+            <span className="mt-1 block text-[11px] leading-4 text-muted">{note}</span>
           </span>
-          <span className="text-[22px] font-semibold tracking-[-0.04em] text-ink">{counts[lane]}</span>
+          <span className="text-[26px] font-semibold tracking-[-0.045em] text-ink">{counts[lane]}</span>
         </button>
       ))}
     </section>
   )
 }
 
-function WorkspaceQuickActions({ onNewUpload, onShowReleases }: { onNewUpload: () => void; onShowReleases: () => void }) {
+function WorkspaceQuickActions({ onNewUpload, onShowCalendar, onShowReleases }: { onNewUpload: () => void; onShowCalendar: () => void; onShowReleases: () => void }) {
   return (
     <section className="app-panel mt-4 overflow-hidden rounded-xl" aria-labelledby="quick-actions-heading">
       <div className="border-b border-border px-5 py-4">
         <h2 className="text-[15px] font-semibold tracking-[-0.02em] text-ink" id="quick-actions-heading">Quick actions</h2>
       </div>
       <div className="p-2">
-        <button className="flex h-10 w-full items-center gap-3 rounded-md px-3 text-left text-[13px] font-medium text-text-soft transition-colors hover:bg-surface-raised hover:text-ink" onClick={onNewUpload} type="button"><span className="grid size-6 place-items-center rounded-md bg-brand text-brand-ink"><Plus className="size-3.5" /></span>Create a post</button>
-        <button className="flex h-10 w-full items-center gap-3 rounded-md px-3 text-left text-[13px] font-medium text-text-soft transition-colors hover:bg-surface-raised hover:text-ink" onClick={onShowReleases} type="button"><span className="grid size-6 place-items-center rounded-md bg-surface-subtle text-brand"><FileVideo2 className="size-3.5" /></span>View release queue</button>
+        <button className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-left text-[13px] font-medium text-text-soft transition-colors hover:bg-surface-raised hover:text-ink" onClick={onNewUpload} type="button"><span className="grid size-6 place-items-center rounded-md bg-brand text-brand-ink"><Plus className="size-3.5" /></span><span className="flex-1">Create a post</span><ChevronRight className="size-3.5 text-muted-soft" /></button>
+        <button className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-left text-[13px] font-medium text-text-soft transition-colors hover:bg-surface-raised hover:text-ink" onClick={onNewUpload} type="button"><span className="grid size-6 place-items-center rounded-md bg-surface-subtle text-brand"><UploadCloud className="size-3.5" /></span><span className="flex-1">Upload a video</span><ChevronRight className="size-3.5 text-muted-soft" /></button>
+        <button className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-left text-[13px] font-medium text-text-soft transition-colors hover:bg-surface-raised hover:text-ink" onClick={onShowReleases} type="button"><span className="grid size-6 place-items-center rounded-md bg-surface-subtle text-brand"><FileVideo2 className="size-3.5" /></span><span className="flex-1">View releases</span><ChevronRight className="size-3.5 text-muted-soft" /></button>
+        <button className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-left text-[13px] font-medium text-text-soft transition-colors hover:bg-surface-raised hover:text-ink" onClick={onShowCalendar} type="button"><span className="grid size-6 place-items-center rounded-md bg-surface-subtle text-brand"><CalendarDays className="size-3.5" /></span><span className="flex-1">View calendar</span><ChevronRight className="size-3.5 text-muted-soft" /></button>
       </div>
     </section>
   )
@@ -456,12 +481,12 @@ function ReleaseList({
   if (posts.length === 0) {
     const copy = LANE_COPY[lane]
     return (
-      <div className="grid min-h-[420px] place-items-center px-6 py-16 text-center">
+      <div className="grid min-h-[320px] place-items-center px-6 py-12 text-center">
         <div className="max-w-sm">
           <span className="mx-auto grid size-11 place-items-center rounded-[7px] border border-paper-line bg-paper-raised text-paper-ink/45"><FileVideo2 className="size-5" strokeWidth={1.5} /></span>
-          <h2 className="mt-5 text-[18px] font-medium tracking-[-0.02em] text-paper-ink">{copy.emptyTitle}</h2>
+          <h2 className="mt-4 text-[19px] font-semibold tracking-[-0.025em] text-paper-ink">{copy.emptyTitle}</h2>
           <p className="mt-2 text-[13px] leading-6 text-paper-ink/55">{copy.emptyBody}</p>
-          {lane === 'drafts' || lane === 'pipeline' ? <button className="mt-5 inline-flex h-10 items-center gap-2 rounded-[7px] bg-paper-ink px-4 text-[13px] font-medium text-paper transition-colors hover:bg-black" onClick={onNewUpload} type="button"><Plus className="size-4" />Prepare upload</button> : null}
+          {lane === 'drafts' || lane === 'pipeline' ? <div className="mt-5 flex flex-wrap justify-center gap-2"><button className="inline-flex h-10 items-center gap-2 rounded-lg bg-brand px-4 text-[13px] font-semibold text-brand-ink transition-colors hover:bg-brand-hover" onClick={onNewUpload} type="button"><Plus className="size-4" />Create your first draft</button><button className="inline-flex h-10 items-center gap-2 rounded-lg border border-paper-line bg-paper-raised px-4 text-[13px] font-medium text-paper-ink transition-colors hover:bg-paper-soft" onClick={onNewUpload} type="button"><UploadCloud className="size-4" />Upload video</button></div> : null}
         </div>
       </div>
     )
@@ -937,37 +962,38 @@ export function DashboardPage({ accountLabel, accountEmail, onSignOut, userId = 
   const modalOpen = composerOpen || Boolean(deletingPost)
 
   return (
-    <div className="min-h-screen bg-workspace text-body">
-      <div aria-hidden={modalOpen ? 'true' : undefined} className="flex min-h-screen" inert={modalOpen}>
+    <div className="min-h-screen bg-workspace text-body lg:h-screen lg:overflow-hidden">
+      <div aria-hidden={modalOpen ? 'true' : undefined} className="flex min-h-screen lg:h-full" inert={modalOpen}>
         <WorkspaceSidebar accountEmail={accountEmail} accountLabel={accountLabel} channelCount={channels.length} onNewUpload={openComposer} onSignOut={onSignOut} setView={setView} view={view} />
-        <div className="min-w-0 flex-1">
-        <Masthead accountEmail={accountEmail} accountLabel={accountLabel} onNewUpload={openComposer} onSignOut={onSignOut} />
+        <div className="min-w-0 flex-1 lg:flex lg:min-h-0 lg:flex-col">
+        <Masthead accountEmail={accountEmail} accountLabel={accountLabel} onNewUpload={openComposer} onSignOut={onSignOut} search={search} setSearch={setSearch} timezone={timezone} />
 
-        <main className="mx-auto w-full max-w-[1480px] px-4 pb-10 pt-7 sm:px-6 lg:px-8 lg:pb-12 lg:pt-8">
+        <main className={cn('app-scrollbar mx-auto w-full max-w-[1480px] px-4 pb-24 pt-7 sm:px-6 lg:px-8 lg:pt-8', view === 'calendar' ? 'lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden lg:pb-6' : 'lg:flex-1 lg:overflow-y-auto lg:pb-12')}>
+        {view === 'list' ? <>
         <header className="flex flex-col gap-3 pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-[27px] font-semibold tracking-[-0.035em] text-ink sm:text-[31px]">Good evening, {accountLabel} <span aria-hidden="true">✦</span></h1>
-            <p className="mt-1 max-w-xl text-[13px] leading-5 text-muted">Create, schedule, and publish your YouTube releases from one place.</p>
+            <h1 className="text-[32px] font-semibold tracking-[-0.045em] text-ink sm:text-[36px]">Good evening, {accountLabel} <span aria-hidden="true">✦</span></h1>
+            <p className="mt-2 max-w-xl text-[14px] leading-6 text-muted">Create, schedule, and publish your YouTube releases from one calm workspace.</p>
           </div>
-          <div className="flex items-center gap-2 text-[11px] text-muted">
-            <span className="rounded-full border border-border bg-surface px-3 py-1.5 font-mono text-[9px]">{timezone.replaceAll('_', ' ')}</span>
-          </div>
+          <button className="button-primary hidden lg:inline-flex" onClick={openComposer} type="button"><Plus className="size-4" />Create a post</button>
         </header>
 
-        <div className="mt-5"><PublishingSummary counts={counts} onSelectLane={showLane} /></div>
+        <PublishingSummary counts={counts} onSelectLane={showLane} />
 
-        {view === 'list' ? <div className="mt-5"><StageRail activeLane={activeLane} counts={counts} setActiveLane={setActiveLane} /></div> : null}
+        <div className="mt-5"><StageRail activeLane={activeLane} counts={counts} setActiveLane={setActiveLane} /></div>
+        </> : null}
 
-        <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px] xl:items-start">
-          <section className="app-panel order-2 overflow-hidden rounded-xl text-paper-ink xl:order-1" aria-labelledby={`release-lane-${activeLane}`} id="release-ledger-panel" role="tabpanel">
-            <div className="border-b border-paper-line px-4 py-4 sm:px-5 lg:px-6">
+        <div className={cn('grid gap-5 xl:grid-cols-[minmax(0,1fr)_282px] xl:items-start', view === 'list' ? 'mt-5' : 'lg:min-h-0 lg:flex-1')}>
+          <section className={cn('app-panel order-2 overflow-hidden rounded-xl text-paper-ink xl:order-1', view === 'calendar' && 'lg:flex lg:min-h-0 lg:flex-col')} aria-labelledby={`release-lane-${activeLane}`} id="release-ledger-panel" role="tabpanel">
+            <div className="shrink-0 border-b border-paper-line px-4 py-4 sm:px-5 lg:px-6">
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
-                  <h2 className="text-[20px] font-semibold tracking-[-0.025em] text-paper-ink">{view === 'calendar' ? 'Publishing calendar' : LANE_COPY[activeLane].label} <span className="ml-1 text-[13px] font-medium text-paper-ink/45">{visiblePosts.length}</span></h2>
+                  <h2 className="text-[21px] font-semibold tracking-[-0.03em] text-paper-ink">{view === 'calendar' ? 'Publishing calendar' : LANE_COPY[activeLane].label} <span className="ml-1 text-[13px] font-medium text-paper-ink/45">{visiblePosts.length}</span></h2>
+                  <p className="mt-1 text-[12px] text-paper-ink/50">{view === 'calendar' ? 'Plan your next YouTube releases at a glance.' : 'Your videos, ideas, and publishing activity.'}</p>
                 </div>
-                <div className="flex h-9 rounded-[7px] border border-paper-line bg-paper-soft p-0.5" aria-label="Release view">
-                  <button aria-label="List" aria-pressed={view === 'list'} className={cn('grid h-8 min-w-9 place-items-center rounded-[5px] text-paper-ink/45 transition-colors', view === 'list' && 'bg-paper-raised text-paper-ink shadow-sm')} onClick={() => setView('list')} type="button"><LayoutList className="size-4" /></button>
-                  <button aria-label="Calendar" aria-pressed={view === 'calendar'} className={cn('grid h-8 min-w-9 place-items-center rounded-[5px] text-paper-ink/45 transition-colors', view === 'calendar' && 'bg-paper-raised text-paper-ink shadow-sm')} onClick={() => setView('calendar')} type="button"><CalendarDays className="size-4" /></button>
+                <div className="flex h-9 rounded-lg border border-paper-line bg-paper-soft p-0.5" aria-label="Release view">
+                  <button aria-label="List" aria-pressed={view === 'list'} className={cn('inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-medium text-paper-ink/45 transition-colors', view === 'list' && 'bg-paper-raised text-paper-ink shadow-sm')} onClick={() => setView('list')} type="button"><LayoutList className="size-3.5" />List</button>
+                  <button aria-label="Calendar" aria-pressed={view === 'calendar'} className={cn('inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-medium text-paper-ink/45 transition-colors', view === 'calendar' && 'bg-paper-raised text-paper-ink shadow-sm')} onClick={() => setView('calendar')} type="button"><CalendarDays className="size-3.5" />Week</button>
                 </div>
               </div>
 
@@ -1004,7 +1030,7 @@ export function DashboardPage({ accountLabel, accountEmail, onSignOut, userId = 
             ) : view === 'list' ? (
               <ReleaseList assets={assetMap} channels={channels} lane={activeLane} onCancelPost={(postId) => void runPublishingAction(postId, 'cancel')} onDeletePost={askToDeletePost} onEditPost={editPost} onNewUpload={openComposer} onQueuePost={queuePost} onRetryPost={(postId) => void runPublishingAction(postId, 'retry')} posts={visiblePosts} publishingActionPostId={publishingActionPostId} queueingPostId={queueingPostId} timezone={timezone} />
             ) : (
-              <ReleaseCalendar onNewUpload={openComposer} posts={visiblePosts} timezone={timezone} />
+              <div className="app-scrollbar lg:min-h-0 lg:flex-1 lg:overflow-y-auto"><ReleaseCalendar onNewUpload={openComposer} posts={visiblePosts} timezone={timezone} /></div>
             )}
 
             {posts.length < postsTotal ? (
@@ -1018,18 +1044,19 @@ export function DashboardPage({ accountLabel, accountEmail, onSignOut, userId = 
 
           <aside className="order-1 xl:order-2" aria-label="Release controls">
             <ConnectYouTubeCard userId={userId} />
-            <WorkspaceQuickActions onNewUpload={openComposer} onShowReleases={() => showLane('drafts')} />
+            <WorkspaceQuickActions onNewUpload={openComposer} onShowCalendar={() => setView('calendar')} onShowReleases={() => showLane('drafts')} />
           </aside>
         </div>
         </main>
         </div>
       </div>
+      <MobileWorkspaceNav onNewUpload={openComposer} setView={setView} view={view} />
 
       {composerOpen ? (
         <UploadComposer
           draft={editingPost}
           onClose={closeComposer}
-          onSaved={() => setUploadNotice({ message: editingPost ? 'Draft changes saved.' : 'Video stored privately and added to the draft ledger.', tone: 'success' })}
+          onSaved={() => setUploadNotice({ message: editingPost ? 'Release changes saved.' : 'Video stored privately and submitted to the YouTube queue.', tone: 'success' })}
           open
           sourceAsset={editingSourceAsset}
           userId={userId}
