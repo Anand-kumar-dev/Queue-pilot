@@ -4,14 +4,19 @@ import { insforge } from '../../lib/insforge'
 
 type AuthConfigResult = Awaited<ReturnType<typeof insforge.auth.getPublicAuthConfig>>
 export type PublicAuthConfig = NonNullable<AuthConfigResult['data']>
+export type AuthStatus = 'booting' | 'authenticated' | 'anonymous' | 'degraded'
 
 export interface AuthContextValue {
   user: UserSchema | null
+  status: AuthStatus
   loading: boolean
+  sessionRefreshing: boolean
+  sessionError: string | null
   config: PublicAuthConfig | null
   configLoading: boolean
   configError: string | null
   refreshUser: () => Promise<UserSchema | null>
+  retrySession: () => Promise<UserSchema | null>
   signOut: () => Promise<void>
 }
 
@@ -26,4 +31,3 @@ export function useAuth() {
 
   return value
 }
-

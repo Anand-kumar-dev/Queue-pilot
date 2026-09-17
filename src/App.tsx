@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react'
+import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Navigate, Route, Routes, Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from './features/auth/AuthContext'
@@ -11,7 +12,7 @@ const AuthCallbackPage = lazy(() => import('./features/auth/AuthCallbackPage').t
 const DashboardPage = lazy(() => import('./features/publishing/PublishingWorkspace').then((module) => ({ default: module.DashboardPage })))
 
 function DashboardRoute() {
-  const { user, signOut } = useAuth()
+  const { retrySession, sessionError, sessionRefreshing, signOut, status, user } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -39,7 +40,21 @@ function DashboardRoute() {
     navigate('/sign-in', { replace: true })
   }
 
-  return <DashboardPage accountEmail={user?.email ?? ''} accountLabel={accountLabel} initialNotice={youtubeNotice} onSignOut={handleSignOut} userId={user?.id ?? ''} />
+  return (
+    <>
+      {status === 'degraded' ? (
+        <div className="fixed inset-x-0 top-0 z-[90] flex min-h-11 items-center justify-center gap-3 border-b border-status-warning/30 bg-status-warning-bg px-4 py-2 text-center text-[12px] text-status-warning" role="status">
+          <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />
+          <span>{sessionError ?? 'Queue Pilot is reconnecting. You remain signed in.'}</span>
+          <button className="inline-flex items-center gap-1 font-semibold underline underline-offset-2 disabled:opacity-50" disabled={sessionRefreshing} onClick={() => void retrySession()} type="button">
+            <RefreshCw className={`size-3.5 ${sessionRefreshing ? 'animate-spin' : ''}`} aria-hidden="true" />
+            Retry
+          </button>
+        </div>
+      ) : null}
+      <DashboardPage accountEmail={user?.email ?? ''} accountLabel={accountLabel} initialNotice={youtubeNotice} onSignOut={handleSignOut} userId={user?.id ?? ''} />
+    </>
+  )
 }
 
 function App() {

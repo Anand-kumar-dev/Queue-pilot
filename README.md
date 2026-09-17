@@ -28,6 +28,7 @@ connected channel, and follow the real state reported by YouTube.
 - Connect more than one YouTube channel without mixing channel access with app login.
 - Upload a video and optional custom thumbnail to private storage.
 - Prepare metadata, audience settings, visibility, tags, and a target release time.
+- Use Queue Pilot AI to suggest a topic angle, titles, description, tags, category, and thumbnail copy before applying any change.
 - Queue the release for YouTube and see its real draft, transfer, scheduled, published, or failed state.
 - Browse releases in a filterable list or weekly publishing calendar.
 
@@ -61,9 +62,20 @@ Git.
 Useful checks:
 
 ```bash
+npm run guard:queuepilot
 npm run lint
+npm test
 npm run build
 ```
+
+## AI metadata setup
+
+The browser never receives the Gemini credential. The deployed
+`youtube-metadata-assistant` InsForge function reads `GEMINI_API_KEY` from the
+project's encrypted server secrets and defaults to the stable
+`gemini-3.8-flash` model. Set `GEMINI_MODEL` only when deliberately pinning a
+different model. The database enforces per-user hourly and daily request
+limits, and generated metadata is not stored until the creator applies it.
 
 ## How publishing works
 

@@ -26,12 +26,14 @@ import {
   validateYoutubeMetadata,
   youtubeTagsCharacterLength,
   YOUTUBE_DESCRIPTION_MAX_BYTES,
+  YOUTUBE_CATEGORIES,
   YOUTUBE_TAGS_MAX_CHARACTERS,
   YOUTUBE_THUMBNAIL_MIME_TYPES,
   YOUTUBE_TITLE_MAX_CHARACTERS,
   type MediaAssetRecord,
   type VideoPostRecord,
 } from './domain'
+import { MetadataAssistant } from './MetadataAssistant'
 
 const THUMBNAIL_LIMIT_BYTES = 2 * 1024 * 1024
 
@@ -88,6 +90,7 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
   const [title, setTitle] = useState(draft?.title ?? '')
   const [description, setDescription] = useState(draft?.description ?? '')
   const [tags, setTags] = useState(draft?.tags.join(', ') ?? '')
+  const [categoryId, setCategoryId] = useState(draft?.category_id ?? '22')
   const [audience, setAudience] = useState<AudienceChoice>(draft?.made_for_kids === true ? 'kids' : draft?.made_for_kids === false ? 'not-kids' : '')
   const [privacy, setPrivacy] = useState<TargetPrivacyStatus>(draft?.target_privacy_status ?? 'private')
   const [scheduleEnabled, setScheduleEnabled] = useState(() => draft ? Boolean(draft.publish_at) : true)
@@ -253,7 +256,7 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
       title: title.trim(),
       description: description.trim(),
       tags: normalizedTags,
-      category_id: '22',
+      category_id: categoryId,
       default_language: null,
       target_privacy_status: scheduleEnabled ? 'public' as const : privacy,
       made_for_kids: audience === 'kids',
@@ -342,6 +345,15 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
         const release = (Array.isArray(createdRelease) ? createdRelease[0] : createdRelease) as { id?: string } | null
         if (!release?.id) throw new Error('The release was created but did not return an identifier.')
         releaseCreated = true
+
+        if (categoryId !== '22') {
+          const { error: categoryError } = await insforge.database
+            .from('video_posts')
+            .update({ category_id: categoryId })
+            .eq('id', release.id)
+            .eq('user_id', userId)
+          if (categoryError) throw categoryError
+        }
 
         setPhase('queue')
         const { error: queueError } = await insforge.database.rpc('enqueue_video_post', { p_video_post_id: release.id })
@@ -447,6 +459,18 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
 
             <section className="mt-8 border-t border-border pt-7" aria-labelledby={`${descriptionId}-details-heading`}>
               <h3 className="text-[18px] font-semibold text-ink" id={`${descriptionId}-details-heading`}>Video details</h3>
+              <MetadataAssistant
+                currentDescription={description}
+                currentTags={tags}
+                currentTitle={title}
+                disabled={busy}
+                onApply={(patch) => {
+                  if (patch.title !== undefined) setTitle(patch.title)
+                  if (patch.description !== undefined) setDescription(patch.description)
+                  if (patch.tags !== undefined) setTags(patch.tags)
+                  if (patch.categoryId !== undefined) setCategoryId(patch.categoryId)
+                }}
+              />
               <div className="mt-4">
                 <label className="field-label" htmlFor={`${descriptionId}-title`}>Title</label>
                 <input aria-invalid={unicodeCharacterLength(title.trim()) > YOUTUBE_TITLE_MAX_CHARACTERS || /[<>]/.test(title)} className="field-input" disabled={busy} id={`${descriptionId}-title`} onChange={(event) => setTitle(event.target.value)} placeholder="A clear title for this release" value={title} />
@@ -464,6 +488,12 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
                   <p className="field-hint">Separate tags with commas.</p>
                   <p className={`field-hint font-mono ${tagCharacters > YOUTUBE_TAGS_MAX_CHARACTERS ? '!text-status-paper-danger' : ''}`}>{tagCharacters} / {YOUTUBE_TAGS_MAX_CHARACTERS}</p>
                 </div>
+              </div>
+              <div className="mt-4">
+                <label className="field-label" htmlFor={`${descriptionId}-category`}>YouTube category</label>
+                <select className="field-input" disabled={busy} id={`${descriptionId}-category`} onChange={(event) => setCategoryId(event.target.value)} value={categoryId}>
+                  {YOUTUBE_CATEGORIES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                </select>
               </div>
               {!editing ? <div className="mt-4">
                 <label className="field-label" htmlFor={thumbnailInputId}>Custom thumbnail <span className="font-normal text-muted">optional</span></label>
@@ -527,10 +557,10 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
             </div>
 
             </div>
-            <aside className="hidden border-l border-border bg-[#121415] text-paper-ink lg:flex lg:flex-col lg:overflow-y-auto" aria-label="YouTube release preview">
+            <aside className="hidden border-l border-border bg-[#121415] text-white lg:flex lg:flex-col lg:overflow-y-auto" aria-label="YouTube release preview">
               <div className="border-b border-border px-6 py-5">
-                <p className="text-[16px] font-semibold tracking-[-0.02em] text-paper-ink">YouTube preview</p>
-                <p className="mt-1 text-[12px] leading-5 text-paper-ink/55">A live reference for what you are preparing.</p>
+                <p className="text-[16px] font-semibold tracking-[-0.02em] text-white">YouTube preview</p>
+                <p className="mt-1 text-[12px] leading-5 text-white/55">A live reference for what you are preparing.</p>
               </div>
               <div className="flex flex-1 flex-col justify-center px-6 py-8">
                 <div className="overflow-hidden rounded-xl border border-white/10 bg-[#202324] shadow-[0_16px_40px_rgba(0,0,0,0.28)]">
@@ -544,9 +574,9 @@ export function UploadComposer({ open, userId, onClose, onSaved, draft, sourceAs
                   </div>
                 </div>
                 <div className="mt-6 rounded-lg border border-white/10 bg-white/[0.03] p-4">
-                  <div className="flex items-center justify-between gap-3"><span className="text-[12px] text-paper-ink/55">Readiness</span><span className="text-[12px] font-semibold text-brand">{completedChecks}/{manifestChecks.length}</span></div>
+                  <div className="flex items-center justify-between gap-3"><span className="text-[12px] text-white/55">Readiness</span><span className="text-[12px] font-semibold text-brand">{completedChecks}/{manifestChecks.length}</span></div>
                   <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-brand transition-[width] duration-300" style={{ width: `${(completedChecks / manifestChecks.length) * 100}%` }} /></div>
-                  <p className="mt-3 text-[11px] leading-5 text-paper-ink/55">{scheduleEnabled && validScheduledDate ? `Target: ${validScheduledDate.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}` : scheduleEnabled ? 'Choose a target time to schedule.' : 'This release will remain private.'}</p>
+                  <p className="mt-3 text-[11px] leading-5 text-white/55">{scheduleEnabled && validScheduledDate ? `Target: ${validScheduledDate.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}` : scheduleEnabled ? 'Choose a target time to schedule.' : 'This release will remain private.'}</p>
                 </div>
               </div>
             </aside>

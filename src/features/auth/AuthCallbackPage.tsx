@@ -6,14 +6,14 @@ import { useAuth } from './AuthContext'
 import { AUTH_RETURN_TO_KEY, getSafeReturnTo } from './redirects'
 
 export function AuthCallbackPage() {
-  const { user, loading } = useAuth()
+  const { status, user } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [settledWithoutUser, setSettledWithoutUser] = useState(false)
   const callbackError = searchParams.get('insforge_error')
 
   useEffect(() => {
-    if (loading || callbackError) return
+    if (status === 'booting' || status === 'degraded' || callbackError) return
 
     if (user) {
       const returnTo = getSafeReturnTo(sessionStorage.getItem(AUTH_RETURN_TO_KEY))
@@ -24,7 +24,7 @@ export function AuthCallbackPage() {
 
     sessionStorage.removeItem(AUTH_RETURN_TO_KEY)
     setSettledWithoutUser(true)
-  }, [callbackError, loading, navigate, user])
+  }, [callbackError, navigate, status, user])
 
   return (
     <AuthLayout>

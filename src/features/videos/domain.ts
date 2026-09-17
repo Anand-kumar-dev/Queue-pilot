@@ -12,6 +12,23 @@ export const YOUTUBE_DESCRIPTION_MAX_BYTES = 5_000
 export const YOUTUBE_TAGS_MAX_CHARACTERS = 500
 export const YOUTUBE_TAGS_MAX_COUNT = 100
 export const YOUTUBE_THUMBNAIL_MIME_TYPES = ['image/jpeg', 'image/png'] as const
+export const YOUTUBE_CATEGORIES = [
+  ['1', 'Film & Animation'],
+  ['2', 'Autos & Vehicles'],
+  ['10', 'Music'],
+  ['15', 'Pets & Animals'],
+  ['17', 'Sports'],
+  ['19', 'Travel & Events'],
+  ['20', 'Gaming'],
+  ['22', 'People & Blogs'],
+  ['23', 'Comedy'],
+  ['24', 'Entertainment'],
+  ['25', 'News & Politics'],
+  ['26', 'Howto & Style'],
+  ['27', 'Education'],
+  ['28', 'Science & Technology'],
+  ['29', 'Nonprofits & Activism'],
+] as const
 
 export const VIDEO_POST_STATUSES = [
   'draft',

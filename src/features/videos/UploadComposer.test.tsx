@@ -68,7 +68,7 @@ describe('UploadComposer', () => {
     await user.upload(fileInput, video)
     await user.click(screen.getByRole('radio', { name: 'No, it is not made for kids' }))
     await user.click(screen.getByRole('checkbox', { name: /I confirm that this upload follows/i }))
-    await user.click(screen.getByRole('button', { name: 'Save upload draft' }))
+    await user.click(screen.getByRole('button', { name: 'Schedule for YouTube' }))
 
     await waitFor(() => expect(onSaved).toHaveBeenCalledOnce())
     expect(onClose).toHaveBeenCalledOnce()
@@ -115,7 +115,7 @@ describe('UploadComposer', () => {
     await user.click(screen.getByRole('radio', { name: 'No, it is not made for kids' }))
     await user.click(screen.getByRole('checkbox', { name: /I confirm that this upload follows/i }))
     fireEvent.change(screen.getByLabelText('Description'), { target: { value: '🎬'.repeat(1_251) } })
-    await user.click(screen.getByRole('button', { name: 'Save upload draft' }))
+    await user.click(screen.getByRole('button', { name: 'Schedule for YouTube' }))
 
     expect(screen.getByRole('alert')).toHaveTextContent('5,000 UTF-8 bytes')
     expect(storageFrom).not.toHaveBeenCalled()
@@ -150,11 +150,11 @@ describe('UploadComposer', () => {
     }
     const { onSaved } = renderComposer(draft)
 
-    expect(screen.getByRole('heading', { name: 'Edit release draft' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Edit release' })).toBeInTheDocument()
     await user.clear(screen.getByLabelText('Title'))
     await user.type(screen.getByLabelText('Title'), 'Updated release')
     await user.click(screen.getByRole('checkbox', { name: /I confirm that this upload follows/i }))
-    await user.click(screen.getByRole('button', { name: 'Save draft changes' }))
+    await user.click(screen.getByRole('button', { name: 'Save release changes' }))
 
     await waitFor(() => expect(onSaved).toHaveBeenCalledOnce())
     expect(storageFrom).not.toHaveBeenCalled()

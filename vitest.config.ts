@@ -5,7 +5,9 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: 'jsdom',
-    pool: 'threads',
+    // Forks are more reliable than worker_threads with the current Windows
+    // toolchain; the thread pool can stall before test collection.
+    pool: 'forks',
     maxWorkers: 1,
     setupFiles: './src/test/setup.ts',
   },

@@ -126,7 +126,7 @@
   }
 
   .paper-control {
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   .manifest-label {
@@ -134,7 +134,7 @@
   }
 
   .manifest-input {
-    color-scheme: dark;
+    color-scheme: light;
     @apply mt-1.5 h-11 w-full rounded-[7px] border border-paper-line bg-paper-raised px-3 text-sm text-paper-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-paper-ink/35 focus:border-brand focus:ring-2 focus:ring-brand/15;
   }
 
@@ -148,52 +148,60 @@
 
   .manifest-paper .text-ink,
   .manifest-paper .field-label {
-    color: #f5f1e9 !important;
+    color: #242622 !important;
   }
 
   .manifest-paper .text-muted,
   .manifest-paper .field-hint {
-    color: rgb(245 241 233 / 0.68) !important;
+    color: rgb(36 38 34 / 0.66) !important;
   }
 
   .manifest-paper .text-muted-soft,
   .manifest-paper .technical-label {
-    color: rgb(245 241 233 / 0.48) !important;
+    color: rgb(36 38 34 / 0.48) !important;
   }
 
   .manifest-paper .border-border,
   .manifest-paper .border-border-strong {
-    border-color: #303536 !important;
+    border-color: #d6cbbb !important;
   }
 
   .manifest-paper .bg-surface,
   .manifest-paper .bg-surface-raised {
-    background-color: #181b1d !important;
+    background-color: #fcf8ef !important;
   }
 
   .manifest-paper .bg-surface-subtle {
-    background-color: #25292a !important;
+    background-color: #e9e2d3 !important;
   }
 
   .manifest-paper .field-input {
-    color-scheme: dark;
-    border-color: #464c4c;
-    background-color: #181b1d;
-    color: #f5f1e9;
+    color-scheme: light;
+    border-color: #d6cbbb;
+    background-color: #fcf8ef;
+    color: #242622;
   }
 
   .manifest-paper .field-input::placeholder {
-    color: rgb(245 241 233 / 0.35);
+    color: rgb(36 38 34 / 0.38);
   }
 
   .manifest-paper .button-secondary {
-    border-color: #464c4c;
-    background-color: #181b1d;
-    color: #f5f1e9;
+    border-color: #d6cbbb;
+    background-color: #fcf8ef;
+    color: #242622;
+  }
+
+  .manifest-paper .button-secondary:hover {
+    background-color: #e9e2d3;
   }
 
   .app-panel {
     @apply border border-border bg-surface shadow-[0_8px_24px_rgba(0,0,0,0.12)];
+  }
+
+  .ledger-panel {
+    @apply border border-paper-line bg-paper shadow-[0_20px_60px_rgba(0,0,0,0.18)];
   }
 
   .release-row {

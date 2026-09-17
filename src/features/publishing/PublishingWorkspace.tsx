@@ -179,7 +179,7 @@ function Masthead({
   timezone: string
 }) {
   return (
-    <header className="shrink-0 border-b border-border bg-surface">
+    <header className="shrink-0 border-b border-border bg-surface/95 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center gap-3 px-4 sm:px-6 lg:px-7">
         <div className="flex min-w-0 items-center gap-3 lg:hidden">
           <RunwayMark />
@@ -241,7 +241,7 @@ function WorkspaceSidebar({
   )
 
   return (
-    <aside className="hidden h-full w-60 shrink-0 flex-col border-r border-border bg-rail px-3 py-4 lg:flex">
+    <aside className="hidden h-full w-60 shrink-0 flex-col border-r border-border bg-rail px-3 py-4 shadow-[12px_0_36px_rgba(0,0,0,0.12)] lg:flex">
       <div className="flex items-center gap-3 px-2 py-2">
         <RunwayMark />
         <div>
@@ -789,7 +789,7 @@ export interface DashboardPageProps {
 export function DashboardPage({ accountLabel, accountEmail, onSignOut, userId = '', initialNotice = null }: DashboardPageProps) {
   const queryClient = useQueryClient()
   const [activeLane, setActiveLane] = useState<ReleaseLane>('drafts')
-  const [view, setView] = useState<ReleaseView>('calendar')
+  const [view, setView] = useState<ReleaseView>('list')
   const [selectedChannelId, setSelectedChannelId] = useState('all')
   const [selectedTag, setSelectedTag] = useState('all')
   const [search, setSearch] = useState('')
@@ -972,8 +972,9 @@ export function DashboardPage({ accountLabel, accountEmail, onSignOut, userId = 
         {view === 'list' ? <>
         <header className="flex flex-col gap-3 pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-[32px] font-semibold tracking-[-0.045em] text-ink sm:text-[36px]">Good evening, {accountLabel} <span aria-hidden="true">✦</span></h1>
-            <p className="mt-2 max-w-xl text-[14px] leading-6 text-muted">Create, schedule, and publish your YouTube releases from one calm workspace.</p>
+            <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.14em] text-brand">YouTube release operations</p>
+            <h1 className="text-[32px] font-semibold tracking-[-0.045em] text-ink sm:text-[36px]">Release desk</h1>
+            <p className="mt-2 max-w-xl text-[14px] leading-6 text-muted">Shape the metadata, set the timing, and move every video toward publish.</p>
           </div>
           <button className="button-primary hidden lg:inline-flex" onClick={openComposer} type="button"><Plus className="size-4" />Create a post</button>
         </header>
@@ -983,8 +984,8 @@ export function DashboardPage({ accountLabel, accountEmail, onSignOut, userId = 
         <div className="mt-5"><StageRail activeLane={activeLane} counts={counts} setActiveLane={setActiveLane} /></div>
         </> : null}
 
-        <div className={cn('grid gap-5 xl:grid-cols-[minmax(0,1fr)_282px] xl:items-start', view === 'list' ? 'mt-5' : 'lg:min-h-0 lg:flex-1')}>
-          <section className={cn('app-panel order-2 overflow-hidden rounded-xl text-paper-ink xl:order-1', view === 'calendar' && 'lg:flex lg:min-h-0 lg:flex-col')} aria-labelledby={`release-lane-${activeLane}`} id="release-ledger-panel" role="tabpanel">
+        <div className={cn('grid gap-5', view === 'list' ? 'mt-5 xl:grid-cols-[minmax(0,1fr)_282px] xl:items-start' : 'lg:min-h-0 lg:flex-1')}>
+          <section className={cn('ledger-panel order-2 overflow-hidden rounded-xl text-paper-ink xl:order-1', view === 'calendar' && 'lg:flex lg:min-h-0 lg:flex-col')} aria-labelledby={`release-lane-${activeLane}`} id="release-ledger-panel" role="tabpanel">
             <div className="shrink-0 border-b border-paper-line px-4 py-4 sm:px-5 lg:px-6">
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
@@ -1042,7 +1043,7 @@ export function DashboardPage({ accountLabel, accountEmail, onSignOut, userId = 
             ) : null}
           </section>
 
-          <aside className="order-1 xl:order-2" aria-label="Release controls">
+          <aside className={cn('order-1 xl:order-2', view === 'calendar' && 'hidden')} aria-label="Release controls">
             <ConnectYouTubeCard userId={userId} />
             <WorkspaceQuickActions onNewUpload={openComposer} onShowCalendar={() => setView('calendar')} onShowReleases={() => showLane('drafts')} />
           </aside>

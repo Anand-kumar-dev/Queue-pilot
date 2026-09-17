@@ -6,16 +6,16 @@ import { DashboardPage } from './features/publishing/PublishingWorkspace'
 import type { VideoPostRecord } from './features/videos/domain'
 import type { YoutubeChannel } from './features/youtube/channels'
 
-const { databaseRpc, functionsInvoke, storageFrom } = vi.hoisted(() => ({
+const { databaseRpc, functionPost, storageFrom } = vi.hoisted(() => ({
   databaseRpc: vi.fn(),
-  functionsInvoke: vi.fn(),
+  functionPost: vi.fn(),
   storageFrom: vi.fn(),
 }))
 
 vi.mock('./lib/insforge', () => ({
   insforge: {
     database: { from: vi.fn(), rpc: databaseRpc },
-    functions: { invoke: functionsInvoke },
+    getHttpClient: () => ({ post: functionPost }),
     storage: { from: storageFrom },
   },
 }))
@@ -49,7 +49,7 @@ describe('Publishing workspace', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     databaseRpc.mockResolvedValue({ data: { video_post_id: 'draft-123', objects: [{ bucket: 'video-uploads', key: 'user-123/asset-123/studio-walkthrough.mp4' }] }, error: null })
-    functionsInvoke.mockResolvedValue({ data: { success: true }, error: null })
+    functionPost.mockResolvedValue({ success: true })
     storageFrom.mockReturnValue({ remove: vi.fn().mockResolvedValue({ data: null, error: null }) })
   })
 
@@ -60,7 +60,7 @@ describe('Publishing workspace', () => {
     expect(screen.getByText('No drafts on the workbench')).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: /Drafts/ })).toHaveTextContent('0')
     expect(screen.queryByText('Sample data')).not.toBeInTheDocument()
-    expect(screen.getAllByText('No YouTube channel connected').length).toBeGreaterThan(0)
+    expect(screen.getByRole('button', { name: 'Connect YouTube' })).toBeInTheDocument()
   })
 
   it('switches the real queue to an empty calendar', async () => {
@@ -71,8 +71,8 @@ describe('Publishing workspace', () => {
     const calendarButton = within(viewControl).getByRole('button', { name: 'Calendar' })
     await user.click(calendarButton)
 
-    expect(screen.getByText(/^Week of /)).toBeInTheDocument()
-    expect(screen.getAllByText('No release')).toHaveLength(7)
+    expect(screen.getByText(/Weekly publishing schedule/)).toBeInTheDocument()
+    expect(screen.getByText(/Nothing planned for this week yet/)).toBeInTheDocument()
     expect(calendarButton).toHaveAttribute('aria-pressed', 'true')
   })
 
@@ -92,18 +92,18 @@ describe('Publishing workspace', () => {
     const user = userEvent.setup()
     renderDashboard()
 
-    const uploadButtons = screen.getAllByRole('button', { name: 'New upload' })
+    const uploadButtons = screen.getAllByRole('button', { name: 'Create post' })
     await user.click(uploadButtons.at(-1)!)
 
     expect(await screen.findByRole('dialog', { name: 'Prepare a release' })).toBeInTheDocument()
     expect(screen.getByText('YouTube channel required')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Save upload draft' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Schedule for YouTube' })).toBeDisabled()
   })
 
   it('moves focus into the composer and closes it with Escape', async () => {
     const user = userEvent.setup()
     renderDashboard()
-    const trigger = screen.getByRole('button', { name: 'New upload' })
+    const trigger = screen.getAllByRole('button', { name: 'Create post' }).at(-1)!
 
     await user.click(trigger)
     const title = await screen.findByRole('heading', { name: 'Prepare a release' })
@@ -146,11 +146,11 @@ describe('Publishing workspace', () => {
 
     await user.click(screen.getByRole('button', { name: 'Disconnect' }))
     const confirmation = screen.getByRole('group', { name: 'Disconnect Creator channel?' })
-    expect(functionsInvoke).not.toHaveBeenCalled()
-    await user.click(within(confirmation).getByRole('button', { name: 'Disconnect channel' }))
+    expect(functionPost).not.toHaveBeenCalled()
+    await user.click(within(confirmation).getByRole('button', { name: 'Disconnect' }))
 
-    await waitFor(() => expect(functionsInvoke).toHaveBeenCalledWith('youtube-oauth', {
-      body: { action: 'disconnect', channelId: 'channel-123' },
+    await waitFor(() => expect(functionPost).toHaveBeenCalledWith('/functions/youtube-oauth', {
+      action: 'disconnect', channelId: 'channel-123',
     }))
   })
 })
